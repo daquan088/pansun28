@@ -970,6 +970,14 @@ blockquote {
   margin-top: 22px;
 }
 
+.result-cta {
+  flex-basis: 100%;
+  margin: 0 0 2px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 .result-actions .button-primary {
   min-width: 178px;
 }

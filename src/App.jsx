@@ -6,6 +6,7 @@ import StatusForm, { STATUS_GROUPS } from "./components/StatusForm";
 import UploadField from "./components/UploadField";
 
 const EMPTY_STATES = Object.fromEntries(STATUS_GROUPS.map((group) => [group.id, ""]));
+const ACCEPTED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const STEP_COPY = [
   { title: "上传照片", description: "选择一张清晰正面照" },
@@ -61,8 +62,8 @@ export default function App() {
   function selectPhoto(file) {
     setError("");
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("请选择 JPG、PNG 或其他常见图片格式。");
+    if (!ACCEPTED_PHOTO_TYPES.has(file.type)) {
+      setError("请选择 JPG、PNG 或 WebP 图片。");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -114,7 +115,7 @@ export default function App() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload?.error || payload?.message || "生成失败，请稍后重试。");
+        throw new Error(payload?.error?.message || payload?.message || "生成失败，请稍后重试。");
       }
 
       setProgress(100);

@@ -35,14 +35,14 @@ export default function UploadField({ file, previewUrl, onSelect }) {
           <button className="upload-prompt" type="button" onClick={() => inputRef.current?.click()}>
             <span className="upload-icon"><UploadCloud size={30} /></span>
             <strong id="upload-title">拖拽照片到这里，或点击选择</strong>
-            <span>支持 JPG、PNG 等常见格式，最大 10MB</span>
+            <span>支持 JPG、PNG、WebP，最大 10MB</span>
           </button>
         )}
         <input
           ref={inputRef}
           className="visually-hidden"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onChange={(event) => {
             onSelect(event.target.files?.[0]);
             event.target.value = "";

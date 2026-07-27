@@ -74,12 +74,13 @@ export default function ResultView({ result, onRestart }) {
       </div>
 
       <div className="result-actions">
+        <p className="result-cta">{result.cta}</p>
         <button className="button button-primary" type="button" onClick={downloadCard} disabled={isDownloading}>
           <Download size={18} /> {isDownloading ? "正在生成图片…" : "下载分享卡"}
         </button>
         <button className="button button-secondary" type="button" onClick={copyKeyword}>
           {copied ? <Check size={18} /> : <Copy size={18} />}
-          {copied ? "已复制“食养”" : (result.cta || `复制私信关键词“${keyword}”`)}
+          {copied ? "已复制“食养”" : `复制私信关键词“${keyword}”`}
         </button>
       </div>
       {actionError && <p className="error-message" role="alert">{actionError}</p>}

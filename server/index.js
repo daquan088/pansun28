@@ -99,7 +99,7 @@ export function createApp(options = {}) {
   }));
 
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, configured: Boolean(process.env.XIAOJI_API_KEY) });
+    res.json({ ok: true });
   });
 
   app.post("/api/analyze", upload.single("photo"), async (req, res, next) => {

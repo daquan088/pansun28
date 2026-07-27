@@ -66,7 +66,7 @@ describe("Suhua image API", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("cache-control")).toContain("no-store");
       const text = await response.text();
-      expect(JSON.parse(text)).toEqual({ ok: true, configured: true });
+      expect(JSON.parse(text)).toEqual({ ok: true });
       expect(text).not.toContain("health-secret");
     });
   });
