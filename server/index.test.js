@@ -131,7 +131,7 @@ describe("Suhua image API", () => {
       }
       expect(url.toString()).toBe("https://cdn.example.test/result.png");
       expect(init.redirect).toBe("follow");
-      return new Response(generatedPng, { headers: { "content-type": "image/png" } });
+      return new Response(generatedPng, { headers: { "content-type": "application/octet-stream" } });
     };
 
     await withServer(createApp({ fetchImpl: upstreamFetch }), async (baseUrl) => {

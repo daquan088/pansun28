@@ -102,7 +102,8 @@ async function downloadImage(urlValue, fetchImpl, signal) {
   } catch {
     throw new UpstreamImageError();
   }
-  if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("image/")) {
+  const contentType = response.headers.get("content-type")?.toLowerCase().split(";", 1)[0].trim();
+  if (!response.ok || (!contentType?.startsWith("image/") && contentType !== "application/octet-stream")) {
     throw new UpstreamImageError();
   }
   return readLimitedBody(response);
