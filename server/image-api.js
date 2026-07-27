@@ -133,6 +133,8 @@ export async function generateLifestyleImage(inputJpeg, options = {}) {
   try {
     const form = new FormData();
     form.append("model", process.env.XIAOJI_IMAGE_MODEL || DEFAULT_MODEL);
+    form.append("size", "1024x1024");
+    form.append("quality", "medium");
     form.append("prompt", IMAGE_PROMPT);
     form.append("image", new Blob([inputJpeg], { type: "image/jpeg" }), "photo.jpg");
 
