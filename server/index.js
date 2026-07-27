@@ -25,9 +25,13 @@ class ApiError extends Error {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_PHOTO_BYTES, files: 1, fields: 2 },
+  limits: { fileSize: MAX_PHOTO_BYTES, fieldSize: 64 * 1024, files: 1, fields: 2 },
   fileFilter: (_req, file, callback) => {
-    callback(ALLOWED_MIME_TYPES.has(file.mimetype) ? null : new ApiError(400, "INVALID_PHOTO", "仅支持 JPG、PNG 或 WebP 图片。"), true);
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      callback(new ApiError(400, "INVALID_PHOTO", "仅支持 JPG、PNG 或 WebP 图片。"));
+      return;
+    }
+    callback(null, true);
   },
 });
 
@@ -45,17 +49,17 @@ function parseJsonField(value, fieldName) {
 function validateAnswers(value) {
   const isObject = value && typeof value === "object";
   if (!isObject || (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype)) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是对象或数组。" );
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是对象或数组。");
   }
   if (Object.keys(value).length !== 4) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含四类自述状态。" );
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含四类自述状态。");
   }
   return value;
 }
 
 async function sanitizePhoto(file) {
   if (!file) {
-    throw new ApiError(400, "PHOTO_REQUIRED", "请上传 photo 图片。" );
+    throw new ApiError(400, "PHOTO_REQUIRED", "请上传 photo 图片。");
   }
 
   try {
@@ -70,7 +74,7 @@ async function sanitizePhoto(file) {
       .jpeg({ quality: 88, mozjpeg: true })
       .toBuffer();
   } catch {
-    throw new ApiError(400, "INVALID_PHOTO", "图片无法解码或格式不受支持。" );
+    throw new ApiError(400, "INVALID_PHOTO", "图片无法解码或格式不受支持。");
   }
 }
 
@@ -89,6 +93,9 @@ export function createApp(options = {}) {
     limit: 30,
     standardHeaders: "draft-8",
     legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({ error: { code: "RATE_LIMITED", message: "请求过于频繁，请稍后重试。" } });
+    },
   }));
 
   app.get("/api/health", (_req, res) => {
@@ -97,18 +104,15 @@ export function createApp(options = {}) {
 
   app.post("/api/analyze", upload.single("photo"), async (req, res, next) => {
     try {
-      const consent = parseJsonField(req.body.consent, "consent");
+      const consent = parseJsonField(req.body?.consent, "consent");
       if (consent !== true) {
-        throw new ApiError(400, "CONSENT_REQUIRED", "需要明确同意后才能处理照片。" );
+        throw new ApiError(400, "CONSENT_REQUIRED", "需要明确同意后才能处理照片。");
       }
 
-      const answers = validateAnswers(parseJsonField(req.body.answers, "answers"));
+      const answers = validateAnswers(parseJsonField(req.body?.answers, "answers"));
       const photo = await sanitizePhoto(req.file);
       const image = await generateLifestyleImage(photo, {
         fetchImpl: options.fetchImpl,
-        apiKey: options.apiKey,
-        baseUrl: options.baseUrl,
-        model: options.model,
       });
 
       res.json({ ok: true, image, advice: buildAdvice(answers) });
@@ -141,6 +145,14 @@ export function createApp(options = {}) {
           message: isTooLarge ? "图片不能超过 10MB。" : "图片上传不符合要求。",
         },
       });
+    }
+
+    if (error?.type === "entity.parse.failed") {
+      return res.status(400).json({ error: { code: "INVALID_JSON", message: "请求体不是有效的 JSON。" } });
+    }
+
+    if (error?.type === "entity.too.large") {
+      return res.status(413).json({ error: { code: "REQUEST_TOO_LARGE", message: "请求体过大。" } });
     }
 
     if (error instanceof ApiError) {

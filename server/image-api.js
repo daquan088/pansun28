@@ -2,8 +2,9 @@ import sharp from "sharp";
 
 const DEFAULT_BASE_URL = "https://xiaoji.baziapi.site";
 const DEFAULT_MODEL = "gpt-image-2";
-const TIMEOUT_MS = 125_000;
+export const IMAGE_TIMEOUT_MS = 125_000;
 const MAX_GENERATED_BYTES = 25 * 1024 * 1024;
+const MAX_API_RESPONSE_BYTES = Math.ceil(MAX_GENERATED_BYTES * 4 / 3) + 1024 * 1024;
 
 const IMAGE_PROMPT = [
   "基于上传照片生成一张自然光下、真实克制的食养生活方式肖像。",
@@ -32,15 +33,22 @@ function endpointFrom(baseUrl) {
     throw new UpstreamImageError();
   }
 
-  url.pathname = `${url.pathname.replace(/\/$/, "")}/v1/images/edits`;
+  const pathname = url.pathname.replace(/\/+$/, "");
+  if (pathname.endsWith("/v1/images/edits")) {
+    url.pathname = pathname;
+  } else if (pathname.endsWith("/v1")) {
+    url.pathname = `${pathname}/images/edits`;
+  } else {
+    url.pathname = `${pathname}/v1/images/edits`;
+  }
   url.search = "";
   url.hash = "";
   return url;
 }
 
-async function readLimitedBody(response) {
+async function readLimitedBody(response, maxBytes = MAX_GENERATED_BYTES) {
   const declaredLength = Number(response.headers.get("content-length"));
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_GENERATED_BYTES) {
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     throw new UpstreamImageError();
   }
 
@@ -52,7 +60,7 @@ async function readLimitedBody(response) {
   let total = 0;
   for await (const chunk of response.body) {
     total += chunk.byteLength;
-    if (total > MAX_GENERATED_BYTES) {
+    if (total > maxBytes) {
       throw new UpstreamImageError();
     }
     chunks.push(Buffer.from(chunk));
@@ -84,7 +92,7 @@ async function downloadImage(urlValue, fetchImpl, signal) {
   } catch {
     throw new UpstreamImageError();
   }
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
+  if (url.protocol !== "https:") {
     throw new UpstreamImageError();
   }
 
@@ -113,24 +121,24 @@ async function toJpegDataUrl(buffer) {
 }
 
 export async function generateLifestyleImage(inputJpeg, options = {}) {
-  const apiKey = options.apiKey ?? process.env.XIAOJI_API_KEY;
+  const apiKey = process.env.XIAOJI_API_KEY;
   if (!apiKey) {
     throw new UpstreamImageError();
   }
 
   const fetchImpl = options.fetchImpl || fetch;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), IMAGE_TIMEOUT_MS);
 
   try {
     const form = new FormData();
-    form.append("model", options.model ?? process.env.XIAOJI_IMAGE_MODEL ?? DEFAULT_MODEL);
+    form.append("model", process.env.XIAOJI_IMAGE_MODEL || DEFAULT_MODEL);
     form.append("prompt", IMAGE_PROMPT);
     form.append("image", new Blob([inputJpeg], { type: "image/jpeg" }), "photo.jpg");
 
     let response;
     try {
-      response = await fetchImpl(endpointFrom(options.baseUrl ?? process.env.XIAOJI_BASE_URL), {
+      response = await fetchImpl(endpointFrom(process.env.XIAOJI_BASE_URL), {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}` },
         body: form,
@@ -146,7 +154,7 @@ export async function generateLifestyleImage(inputJpeg, options = {}) {
 
     let payload;
     try {
-      payload = await response.json();
+      payload = JSON.parse((await readLimitedBody(response, MAX_API_RESPONSE_BYTES)).toString("utf8"));
     } catch {
       throw new UpstreamImageError();
     }
