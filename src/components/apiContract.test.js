@@ -30,9 +30,18 @@ describe("analyze API contract", () => {
         cta: "私信关键词“食养”",
         disclaimer: "内容仅作生活方式参考。",
       },
+      contact: {
+        wechatId: "pansun28",
+        qrUrl: "/pansun28-wechat.png",
+        label: "扫码获取微信号",
+      },
     };
 
-    expect(parseAnalyzeResponse(payload)).toEqual({ image: payload.image, ...payload.advice });
+    expect(parseAnalyzeResponse(payload)).toEqual({
+      image: payload.image,
+      ...payload.advice,
+      contact: payload.contact,
+    });
   });
 
   it("rejects incomplete responses", () => {

@@ -308,6 +308,14 @@ h1, h2, p, blockquote { margin-top: 0; }
 .loading-meta strong { color: #fff; font-size: 22px; font-variant-numeric: tabular-nums; }
 .loading-meta span { color: #e8b75b; font-size: 11px; }
 
+.report-module-loading {
+  display: grid;
+  min-height: 50vh;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .result-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
 .result-header h1 { margin-bottom: 0; font-size: 34px; }
 .icon-button { width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid #bdc9c4; color: #42504b; background: #fff; }

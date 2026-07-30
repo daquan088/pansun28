@@ -20,10 +20,9 @@ import {
 } from "recharts";
 import { buildVisualReport } from "../lib/report.js";
 
-const WECHAT_ID = "pansun28";
-
 export default function ResultView({ result, answers, onRestart }) {
   const report = useMemo(() => buildVisualReport(answers), [answers]);
+  const contact = result.contact;
   const cardRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -32,12 +31,12 @@ export default function ResultView({ result, answers, onRestart }) {
 
   async function copyWechat() {
     try {
-      await navigator.clipboard.writeText(WECHAT_ID);
+      await navigator.clipboard.writeText(contact.wechatId);
       setCopied(true);
       setActionError("");
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      setActionError(`复制失败，请手动复制微信号“${WECHAT_ID}”。`);
+      setActionError(`复制失败，请手动复制微信号“${contact.wechatId}”。`);
     }
   }
 
@@ -97,7 +96,14 @@ export default function ResultView({ result, answers, onRestart }) {
                 <RadarChart data={report.dimensions} outerRadius="66%">
                   <PolarGrid stroke="rgba(197, 224, 217, 0.2)" />
                   <PolarAngleAxis dataKey="label" tick={{ fill: "#dce9e5", fontSize: 12 }} />
-                  <Radar dataKey="score" stroke="#72f0cc" fill="#41cfa8" fillOpacity={0.34} strokeWidth={2} />
+                  <Radar
+                    dataKey="score"
+                    stroke="#72f0cc"
+                    fill="#41cfa8"
+                    fillOpacity={0.34}
+                    strokeWidth={2}
+                    isAnimationActive={false}
+                  />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -149,11 +155,11 @@ export default function ResultView({ result, answers, onRestart }) {
         <section className="contact-section">
           <div className="contact-copy">
             <MessageCircle size={24} />
-            <div><small>进一步交流</small><h2>微信 {WECHAT_ID}</h2><p>{result.cta}</p></div>
+            <div><small>进一步交流</small><h2>微信 {contact.wechatId}</h2><p>{result.cta}</p></div>
           </div>
           <div className="qr-block">
-            <img src="/pansun28-wechat.png" alt="微信号 pansun28 的二维码图片" crossOrigin="anonymous" />
-            <div><strong>扫码获取微信号</strong><span>也可复制：{WECHAT_ID}</span></div>
+            <img src={contact.qrUrl} alt={`微信号 ${contact.wechatId} 的二维码图片`} crossOrigin="anonymous" />
+            <div><strong>{contact.label}</strong><span>也可复制：{contact.wechatId}</span></div>
           </div>
         </section>
 
@@ -169,7 +175,7 @@ export default function ResultView({ result, answers, onRestart }) {
         </button>
         <button className="button button-secondary" type="button" onClick={copyWechat}>
           {copied ? <Check size={18} /> : <Copy size={18} />}
-          {copied ? "已复制微信号" : `复制微信号 ${WECHAT_ID}`}
+          {copied ? "已复制微信号" : `复制微信号 ${contact.wechatId}`}
         </button>
       </div>
       {actionError && <p className="error-message" role="alert">{actionError}</p>}

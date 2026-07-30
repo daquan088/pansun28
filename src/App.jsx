@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, ShieldCheck } from "lucide-react";
 import LoadingExperience, { MIN_LOADING_MS, progressAt } from "./components/LoadingExperience";
 import ProgressSidebar from "./components/ProgressSidebar";
-import ResultView from "./components/ResultView";
 import StatusForm, { STATUS_GROUPS } from "./components/StatusForm";
 import UploadField from "./components/UploadField";
 
 const EMPTY_STATES = Object.fromEntries(STATUS_GROUPS.map((group) => [group.id, ""]));
 const ACCEPTED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const loadResultView = () => import("./components/ResultView");
+const ResultView = lazy(loadResultView);
 
 const STEP_COPY = [
   { title: "上传自拍", description: "用于生成视觉肖像" },
@@ -26,6 +27,7 @@ export function createAnalyzeFormData(photo, answers) {
 
 export function parseAnalyzeResponse(payload) {
   const advice = payload?.advice;
+  const contact = payload?.contact;
   if (
     payload?.ok !== true
     || typeof payload.image !== "string"
@@ -33,10 +35,13 @@ export function parseAnalyzeResponse(payload) {
     || !Array.isArray(advice?.suggestions)
     || typeof advice?.cta !== "string"
     || typeof advice?.disclaimer !== "string"
+    || typeof contact?.wechatId !== "string"
+    || typeof contact?.qrUrl !== "string"
+    || typeof contact?.label !== "string"
   ) {
     throw new Error("服务返回的数据不完整，请重新生成。");
   }
-  return { image: payload.image, ...advice };
+  return { image: payload.image, ...advice, contact };
 }
 
 function wait(ms) {
@@ -109,6 +114,7 @@ export default function App() {
     setError("");
     setIsSubmitting(true);
     setProgress(1);
+    void loadResultView();
     const startedAt = performance.now();
     const progressTimer = window.setInterval(() => {
       setProgress(progressAt(performance.now() - startedAt));
@@ -200,7 +206,11 @@ export default function App() {
             </section>
           )}
 
-          {step === 3 && result && <ResultView result={result} answers={states} onRestart={startOver} />}
+          {step === 3 && result && (
+            <Suspense fallback={<div className="report-module-loading" role="status">正在打开报告</div>}>
+              <ResultView result={result} answers={states} onRestart={startOver} />
+            </Suspense>
+          )}
           {isSubmitting && <LoadingExperience progress={progress} />}
           {error && <p className="error-message" role="alert">{error}</p>}
 

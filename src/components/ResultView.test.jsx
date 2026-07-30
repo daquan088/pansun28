@@ -19,6 +19,11 @@ const result = {
   suggestions: ["建议一"],
   cta: "欢迎进一步交流。",
   disclaimer: "仅作参考。",
+  contact: {
+    wechatId: "pansun28",
+    qrUrl: "/pansun28-wechat.png",
+    label: "扫码获取微信号",
+  },
 };
 
 const answers = {
