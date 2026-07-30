@@ -7,10 +7,19 @@ const originalEnvironment = {
   XIAOJI_API_KEY: process.env.XIAOJI_API_KEY,
   XIAOJI_BASE_URL: process.env.XIAOJI_BASE_URL,
   XIAOJI_IMAGE_MODEL: process.env.XIAOJI_IMAGE_MODEL,
+  WECHAT_ID: process.env.WECHAT_ID,
 };
 
 let inputPng;
 let generatedPng;
+const validAnswers = {
+  bowelRhythm: "规律",
+  gutComfort: "舒适",
+  complexionSelfReport: "气色正常",
+  sleep: "睡眠不足",
+  stress: "压力较高",
+  mood: "平稳",
+};
 
 beforeAll(async () => {
   inputPng = await sharp({
@@ -48,12 +57,7 @@ async function withServer(app, callback) {
 function analyzeForm(overrides = {}) {
   const form = new FormData();
   form.append("photo", overrides.photo ?? new Blob([inputPng], { type: "image/png" }), "portrait.png");
-  form.append("answers", overrides.answers ?? JSON.stringify({
-    sleep: "睡眠不足",
-    digestion: "饮食规律",
-    energy: "有些疲累",
-    mood: "压力较高",
-  }));
+  form.append("answers", overrides.answers ?? JSON.stringify(validAnswers));
   form.append("consent", overrides.consent ?? "true");
   return form;
 }
@@ -75,6 +79,7 @@ describe("Suhua image API", () => {
     process.env.XIAOJI_API_KEY = "server-only-secret";
     process.env.XIAOJI_BASE_URL = "https://xiaoji.baziapi.site/v1/";
     delete process.env.XIAOJI_IMAGE_MODEL;
+    delete process.env.WECHAT_ID;
     let upstreamCalled = false;
 
     const upstreamFetch = async (url, init) => {
@@ -113,9 +118,50 @@ describe("Suhua image API", () => {
         disclaimer: expect.stringContaining("自述状态"),
       });
       expect(body.advice.suggestions).toHaveLength(3);
+      expect(body.contact).toEqual({
+        wechatId: "pansun28",
+        qrUrl: "/pansun28-wechat.png",
+        label: "扫码获取微信号",
+      });
       expect(JSON.stringify(body)).not.toContain("server-only-secret");
     });
     expect(upstreamCalled).toBe(true);
+  });
+
+  it("uses a valid WECHAT_ID environment override", async () => {
+    process.env.XIAOJI_API_KEY = "contact-secret";
+    process.env.WECHAT_ID = "Professor_Pan-28";
+
+    await withServer(createApp({
+      fetchImpl: async () => Response.json({ data: [{ b64_json: generatedPng.toString("base64") }] }),
+    }), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/analyze`, { method: "POST", body: analyzeForm() });
+      expect(response.status).toBe(200);
+      expect((await response.json()).contact).toEqual({
+        wechatId: "Professor_Pan-28",
+        qrUrl: "/pansun28-wechat.png",
+        label: "扫码获取微信号",
+      });
+    });
+  });
+
+  it("falls back to the default contact for a malicious WECHAT_ID", async () => {
+    process.env.XIAOJI_API_KEY = "contact-secret";
+    process.env.WECHAT_ID = '"><script src="//evil.test"></script>';
+
+    await withServer(createApp({
+      fetchImpl: async () => Response.json({ data: [{ b64_json: generatedPng.toString("base64") }] }),
+    }), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/analyze`, { method: "POST", body: analyzeForm() });
+      const text = await response.text();
+      expect(response.status).toBe(200);
+      expect(JSON.parse(text).contact).toEqual({
+        wechatId: "pansun28",
+        qrUrl: "/pansun28-wechat.png",
+        label: "扫码获取微信号",
+      });
+      expect(text).not.toContain("evil.test");
+    });
   });
 
   it("downloads an upstream URL and embeds it as a data URL", async () => {
@@ -159,13 +205,13 @@ describe("Suhua image API", () => {
     expect(upstreamCalled).toBe(false);
   });
 
-  it("rejects invalid photos and answers before calling upstream", async () => {
+  it("rejects invalid photos and missing answer keys before calling upstream", async () => {
     process.env.XIAOJI_API_KEY = "unused-secret";
     const upstreamFetch = async () => { throw new Error("must not be called"); };
     await withServer(createApp({ fetchImpl: upstreamFetch }), async (baseUrl) => {
       const badAnswers = await fetch(`${baseUrl}/api/analyze`, {
         method: "POST",
-        body: analyzeForm({ answers: JSON.stringify({ sleep: "好" }) }),
+        body: analyzeForm({ answers: JSON.stringify({ ...validAnswers, mood: undefined }) }),
       });
       expect(badAnswers.status).toBe(400);
       expect((await badAnswers.json()).error.code).toBe("INVALID_ANSWERS");
@@ -176,6 +222,43 @@ describe("Suhua image API", () => {
       });
       expect(badPhoto.status).toBe(400);
       expect((await badPhoto.json()).error.code).toBe("INVALID_PHOTO");
+    });
+  });
+
+  it.each([
+    ["an extra key", { ...validAnswers, extra: "not allowed" }],
+    ["a non-string value", { ...validAnswers, stress: 3 }],
+    ["an array", Object.values(validAnswers)],
+  ])("rejects answers with %s", async (_case, answers) => {
+    process.env.XIAOJI_API_KEY = "unused-secret";
+    await withServer(createApp({
+      fetchImpl: async () => { throw new Error("must not be called"); },
+    }), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/analyze`, {
+        method: "POST",
+        body: analyzeForm({ answers: JSON.stringify(answers) }),
+      });
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.code).toBe("INVALID_ANSWERS");
+    });
+  });
+
+  it("rejects prototype-pollution keys without modifying object prototypes", async () => {
+    process.env.XIAOJI_API_KEY = "unused-secret";
+    const pollutedAnswers = JSON.stringify(validAnswers).replace(
+      /}$/, ',"__proto__":{"polluted":true}}',
+    );
+
+    await withServer(createApp({
+      fetchImpl: async () => { throw new Error("must not be called"); },
+    }), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/analyze`, {
+        method: "POST",
+        body: analyzeForm({ answers: pollutedAnswers }),
+      });
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.code).toBe("INVALID_ANSWERS");
+      expect({}.polluted).toBeUndefined();
     });
   });
 

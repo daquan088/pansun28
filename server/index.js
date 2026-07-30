@@ -14,6 +14,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_FORMATS = new Set(["jpeg", "png", "webp"]);
+const DEFAULT_WECHAT_ID = "pansun28";
+const WECHAT_ID_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{5,19}$/;
+const CONTACT_LABEL = "扫码获取微信号";
+const ANSWER_KEYS = [
+  "bowelRhythm",
+  "gutComfort",
+  "complexionSelfReport",
+  "sleep",
+  "stress",
+  "mood",
+];
 
 class ApiError extends Error {
   constructor(status, code, message) {
@@ -47,14 +58,29 @@ function parseJsonField(value, fieldName) {
 }
 
 function validateAnswers(value) {
-  const isObject = value && typeof value === "object";
-  if (!isObject || (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype)) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是对象或数组。");
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) {
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是包含固定六项的对象。");
   }
-  if (Object.keys(value).length !== 4) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含四类自述状态。");
+
+  const keys = Object.keys(value);
+  const hasExactKeys = keys.length === ANSWER_KEYS.length
+    && ANSWER_KEYS.every((key) => Object.hasOwn(value, key));
+  const hasStringValues = hasExactKeys && ANSWER_KEYS.every((key) => typeof value[key] === "string");
+  if (!hasStringValues) {
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含固定六项且每项均为字符串。");
   }
   return value;
+}
+
+function buildContact() {
+  const configuredId = process.env.WECHAT_ID?.trim();
+  const wechatId = WECHAT_ID_PATTERN.test(configuredId || "") ? configuredId : DEFAULT_WECHAT_ID;
+
+  return {
+    wechatId,
+    qrUrl: "/pansun28-wechat.png",
+    label: CONTACT_LABEL,
+  };
 }
 
 async function sanitizePhoto(file) {
@@ -115,7 +141,7 @@ export function createApp(options = {}) {
         fetchImpl: options.fetchImpl,
       });
 
-      res.json({ ok: true, image, advice: buildAdvice(answers) });
+      res.json({ ok: true, image, advice: buildAdvice(answers), contact: buildContact() });
     } catch (error) {
       next(error);
     }
