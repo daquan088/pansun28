@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, ShieldCheck } from "lucide-react";
+import LoadingExperience, { MIN_LOADING_MS, progressAt } from "./components/LoadingExperience";
 import ProgressSidebar from "./components/ProgressSidebar";
 import ResultView from "./components/ResultView";
 import StatusForm, { STATUS_GROUPS } from "./components/StatusForm";
@@ -9,10 +10,10 @@ const EMPTY_STATES = Object.fromEntries(STATUS_GROUPS.map((group) => [group.id, 
 const ACCEPTED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const STEP_COPY = [
-  { title: "上传照片", description: "选择一张清晰正面照" },
-  { title: "状态自述", description: "主动选择四类日常信息" },
-  { title: "确认提交", description: "阅读并确认隐私说明" },
-  { title: "查看结果", description: "获取你的状态观察卡" },
+  { title: "上传自拍", description: "用于生成视觉肖像" },
+  { title: "六项自述", description: "记录最近一周感受" },
+  { title: "确认生成", description: "确认信息使用边界" },
+  { title: "状态报告", description: "查看六维观察结果" },
 ];
 
 export function createAnalyzeFormData(photo, answers) {
@@ -38,6 +39,10 @@ export function parseAnalyzeResponse(payload) {
   return { image: payload.image, ...advice };
 }
 
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState(null);
@@ -46,7 +51,7 @@ export default function App() {
   const [consented, setConsented] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(1);
   const [result, setResult] = useState(null);
   const previewRef = useRef("");
 
@@ -85,28 +90,29 @@ export default function App() {
   function moveNext() {
     setError("");
     if (step === 0 && !photo) {
-      setError("请先上传一张清晰的正面照。");
+      setError("请先上传一张本人自拍照。");
       return;
     }
     if (step === 1 && completedStates !== STATUS_GROUPS.length) {
-      setError("请完成饮食、睡眠、活动和压力四项选择。");
+      setError("请完成全部六项本人自述后继续。");
       return;
     }
     setStep((current) => Math.min(current + 1, 2));
   }
 
   async function submitAnalysis() {
-    if (!consented) {
-      setError("请勾选隐私同意后再生成观察卡。");
+    if (!consented || isSubmitting) {
+      if (!consented) setError("请确认信息使用说明后再生成报告。");
       return;
     }
 
     setError("");
     setIsSubmitting(true);
-    setProgress(8);
+    setProgress(1);
+    const startedAt = performance.now();
     const progressTimer = window.setInterval(() => {
-      setProgress((current) => Math.min(current + Math.max(2, Math.round((88 - current) / 7)), 88));
-    }, 420);
+      setProgress(progressAt(performance.now() - startedAt));
+    }, 80);
 
     try {
       const response = await fetch("/api/analyze", {
@@ -115,11 +121,16 @@ export default function App() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload?.error?.message || payload?.message || "生成失败，请稍后重试。");
+        const apiMessage = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+        throw new Error(apiMessage || payload?.message || "生成失败，请稍后重试。");
       }
-
+      const parsedResult = parseAnalyzeResponse(payload);
+      const remaining = Math.max(0, MIN_LOADING_MS - (performance.now() - startedAt));
+      await wait(remaining);
+      window.clearInterval(progressTimer);
       setProgress(100);
-      setResult(parseAnalyzeResponse(payload));
+      await wait(480);
+      setResult(parsedResult);
       setStep(3);
     } catch (requestError) {
       setError(requestError.message || "网络连接异常，请检查后重试。");
@@ -137,7 +148,7 @@ export default function App() {
     setStates(EMPTY_STATES);
     setConsented(false);
     setResult(null);
-    setProgress(0);
+    setProgress(1);
     setError("");
     setStep(0);
   }
@@ -145,77 +156,52 @@ export default function App() {
   return (
     <div className="app-shell">
       <ProgressSidebar steps={STEP_COPY} currentStep={step} />
-
       <main className="workspace">
-        <div className="workspace-inner">
+        <div className={`workspace-inner ${step === 3 ? "result-workspace" : ""}`}>
           {step < 3 && (
             <header className="page-header">
-              <p className="eyebrow">苏华食养状态观察卡</p>
+              <p className="eyebrow">苏华食养 · 状态光谱</p>
               <h1>{STEP_COPY[step].title}</h1>
               <p>
-                {step === 0 && "照片只用于生成视觉卡，不用于分析健康状况。"}
-                {step === 1 && "选择最接近你近期感受的选项，没有好坏之分。"}
-                {step === 2 && "确认信息与隐私说明，生成你的专属观察卡。"}
+                {step === 0 && "照片仅用于生成报告中的视觉肖像，不用于任何健康推断。"}
+                {step === 1 && "用六项本人自述记录近期节奏，所有结果均来自你的主动选择。"}
+                {step === 2 && "确认照片和自述的使用边界，生成你的六维状态报告。"}
               </p>
             </header>
           )}
 
-          {step === 0 && (
-            <UploadField file={photo} previewUrl={previewUrl} onSelect={selectPhoto} />
-          )}
-
-          {step === 1 && (
-            <StatusForm values={states} onChange={updateState} />
-          )}
+          {step === 0 && <UploadField file={photo} previewUrl={previewUrl} onSelect={selectPhoto} />}
+          {step === 1 && <StatusForm values={states} onChange={updateState} />}
 
           {step === 2 && (
             <section className="confirm-panel" aria-labelledby="confirm-title">
               <div className="confirm-summary">
-                <img src={previewUrl} alt="待分析照片预览" />
+                <img src={previewUrl} alt="待生成视觉肖像的自拍预览" />
                 <div>
-                  <span className="summary-kicker"><Check size={16} /> 信息已就绪</span>
-                  <h2 id="confirm-title">生成前，请确认隐私说明</h2>
-                  <p>观察建议仅来自你主动选择的饮食、睡眠、活动和压力信息。</p>
+                  <span className="summary-kicker"><Check size={16} /> 六项自述已就绪</span>
+                  <h2 id="confirm-title">确认报告信息边界</h2>
+                  <p>报告仅依据本人自述生成；照片只用于生成视觉肖像，不参与健康推断。</p>
                 </div>
               </div>
               <label className={`consent-row ${consented ? "is-checked" : ""}`}>
                 <input
                   type="checkbox"
                   checked={consented}
-                  onChange={(event) => {
-                    setConsented(event.target.checked);
-                    setError("");
-                  }}
+                  onChange={(event) => { setConsented(event.target.checked); setError(""); }}
                   disabled={isSubmitting}
                 />
                 <span className="custom-checkbox" aria-hidden="true"><Check size={15} /></span>
-                <span>
-                  我已阅读并同意：照片仅用于生成本次个性化观察卡，不用于疾病诊断或健康推断。
-                </span>
+                <span>我已了解：气色、肠道、睡眠、压力与情绪等内容均为我的主动自述，不是照片识别或诊断。</span>
               </label>
               <div className="privacy-note">
                 <ShieldCheck size={19} />
-                <p>请勿上传他人照片。照片与自述信息将按服务隐私规则处理。</p>
+                <p>请勿上传他人照片。本报告仅作日常食养与生活记录参考，不替代专业支持。</p>
               </div>
             </section>
           )}
 
-          {step === 3 && result && <ResultView result={result} onRestart={startOver} />}
-
-          {isSubmitting && (
-            <div className="progress-overlay" role="status" aria-live="polite">
-              <div className="progress-dialog">
-                <LoaderCircle className="spin" size={30} />
-                <h2>正在生成状态观察卡</h2>
-                <p>正在整理你的主动选择并生成专属视觉卡…</p>
-                <div className="progress-track" aria-label={`生成进度 ${progress}%`}>
-                  <span style={{ width: `${progress}%` }} />
-                </div>
-                <strong>{progress}%</strong>
-              </div>
-            </div>
-          )}
-
+          {step === 3 && result && <ResultView result={result} answers={states} onRestart={startOver} />}
+          {isSubmitting && <LoadingExperience progress={progress} />}
           {error && <p className="error-message" role="alert">{error}</p>}
 
           {step < 3 && (
@@ -232,7 +218,7 @@ export default function App() {
               ) : (
                 <button className="button button-primary" type="button" onClick={submitAnalysis} disabled={!consented || isSubmitting}>
                   {isSubmitting ? <LoaderCircle className="spin" size={18} /> : <Check size={18} />}
-                  生成观察卡
+                  生成状态报告
                 </button>
               )}
             </footer>

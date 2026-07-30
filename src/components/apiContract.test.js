@@ -4,7 +4,14 @@ import { createAnalyzeFormData, parseAnalyzeResponse } from "../App";
 describe("analyze API contract", () => {
   it("creates the expected multipart fields", () => {
     const photo = new Blob(["photo"], { type: "image/jpeg" });
-    const answers = { diet: "规律舒适", sleep: "精神比较充足" };
+    const answers = {
+      bowelRhythm: "规律顺畅",
+      gutComfort: "大多舒适",
+      complexionSelfReport: "自觉气色明亮",
+      sleep: "精神比较充足",
+      stress: "轻松平稳",
+      mood: "情绪活力较好",
+    };
     const formData = createAnalyzeFormData(photo, answers);
 
     expect(JSON.parse(formData.get("answers"))).toEqual(answers);
