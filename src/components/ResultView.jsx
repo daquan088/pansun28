@@ -28,6 +28,7 @@ export default function ResultView({ result, answers, onRestart }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [actionError, setActionError] = useState("");
   const needsMoodSupport = answers.mood === "持续低落";
+  const usesUploadedPhoto = result.imageMode === "uploaded";
 
   async function copyWechat() {
     try {
@@ -75,12 +76,12 @@ export default function ResultView({ result, answers, onRestart }) {
       <div className="report-canvas" ref={cardRef}>
         <section className="report-hero">
           <div className="portrait-panel">
-            <img src={result.image} alt="根据上传自拍生成的视觉肖像" />
+            <img src={result.image} alt={usesUploadedPhoto ? "用户上传的自拍影像" : "根据上传自拍生成的视觉肖像"} />
             <div className="portrait-shade" />
             <span className="portrait-label"><Leaf size={15} /> 苏华食养</span>
             <div className="portrait-caption">
-              <small>GENERATED PORTRAIT</small>
-              <strong>视觉肖像</strong>
+              <small>{usesUploadedPhoto ? "UPLOADED PORTRAIT" : "GENERATED PORTRAIT"}</small>
+              <strong>{usesUploadedPhoto ? "自拍影像" : "视觉肖像"}</strong>
               <p>仅作报告视觉呈现，不参与状态判断</p>
             </div>
           </div>

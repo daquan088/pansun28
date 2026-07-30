@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAnalyzeFormData, parseAnalyzeResponse } from "../App";
+import { createAnalyzeFormData, createFallbackResult, parseAnalyzeResponse } from "../App";
 
 describe("analyze API contract", () => {
   it("creates the expected multipart fields", () => {
@@ -39,9 +39,19 @@ describe("analyze API contract", () => {
 
     expect(parseAnalyzeResponse(payload)).toEqual({
       image: payload.image,
+      imageMode: "generated",
       ...payload.advice,
       contact: payload.contact,
     });
+  });
+
+  it("creates a complete local report when the portrait service is unavailable", () => {
+    const result = createFallbackResult("blob:selfie");
+
+    expect(result.image).toBe("blob:selfie");
+    expect(result.imageMode).toBe("uploaded");
+    expect(result.contact.wechatId).toBe("pansun28");
+    expect(result.cta).toContain("潘教授");
   });
 
   it("rejects incomplete responses", () => {

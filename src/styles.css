@@ -284,20 +284,32 @@ h1, h2, p, blockquote { margin-top: 0; }
   color: #eef9f5;
   background: #07100f;
 }
-.compass { position: relative; width: min(64vw, 480px); aspect-ratio: 1; margin: auto; }
+.compass { position: relative; width: min(64vw, 500px); aspect-ratio: 1; margin: auto; filter: drop-shadow(0 0 34px rgba(83, 225, 186, .12)); }
 .compass::before, .compass::after { position: absolute; inset: 8%; border: 1px solid rgba(112, 235, 200, .15); border-radius: 50%; content: ""; }
 .compass::after { inset: 29%; border-color: rgba(236, 94, 80, .32); }
 .compass-ring { position: absolute; border-radius: 50%; }
-.ring-one { inset: 3%; border: 2px solid transparent; border-top-color: #65e5be; border-right-color: rgba(101, 229, 190, .2); animation: compass-spin 5s linear infinite; }
+.ring-one { inset: 3%; border: 2px solid transparent; border-top-color: #65e5be; border-right-color: rgba(101, 229, 190, .2); border-bottom-color: rgba(101, 229, 190, .55); animation: compass-spin 4.2s linear infinite; }
 .ring-two { inset: 15%; border: 1px dashed #e6a72e; animation: compass-spin-reverse 8s linear infinite; }
 .ring-three { inset: 27%; border: 3px double rgba(236, 94, 80, .72); animation: compass-spin 11s linear infinite; }
+.ring-four { inset: 22%; border: 1px solid rgba(101, 229, 190, .26); border-right-color: #65e5be; border-left-color: #e6a72e; animation: compass-spin-reverse 3.8s linear infinite; }
+.compass-halo { position: absolute; inset: 0; border: 1px solid rgba(101, 229, 190, .2); border-radius: 50%; box-shadow: inset 0 0 42px rgba(101, 229, 190, .05), 0 0 42px rgba(101, 229, 190, .08); animation: halo-pulse 2.8s ease-in-out infinite; }
+.compass-scan { position: absolute; z-index: 1; top: 50%; left: 50%; width: 47%; height: 1px; background: #65e5be; box-shadow: 0 0 12px #65e5be; transform-origin: left center; animation: compass-spin 2.9s linear infinite; }
 .compass-axis { position: absolute; top: 50%; left: 8%; width: 84%; height: 1px; background: rgba(114, 240, 204, .18); transform-origin: center; }
 .axis-one { transform: rotate(30deg); }
 .axis-two { transform: rotate(120deg); }
-.compass-core { position: absolute; inset: 39%; display: grid; place-items: center; border: 1px solid #71e9c7; border-radius: 50%; color: #0c1715; background: #72f0cc; box-shadow: 0 0 46px rgba(67, 215, 172, .22); animation: core-pulse 2.2s ease-in-out infinite; }
+.orbit-dot { position: absolute; z-index: 2; width: 7px; height: 7px; border: 1px solid #07100f; border-radius: 50%; background: #65e5be; box-shadow: 0 0 14px #65e5be; }
+.dot-one { top: 2.5%; left: 49%; animation: dot-pulse 1.4s ease-in-out infinite; }
+.dot-two { right: 12%; bottom: 17%; background: #e6a72e; box-shadow: 0 0 14px #e6a72e; animation: dot-pulse 1.4s .4s ease-in-out infinite; }
+.dot-three { bottom: 25%; left: 17%; background: #ec5e50; box-shadow: 0 0 14px #ec5e50; animation: dot-pulse 1.4s .8s ease-in-out infinite; }
+.compass-core { position: absolute; z-index: 3; inset: 31%; overflow: hidden; border: 2px solid #71e9c7; border-radius: 50%; background: #10201c; box-shadow: 0 0 0 7px rgba(7, 16, 15, .88), 0 0 0 9px rgba(230, 167, 46, .42), 0 0 55px rgba(67, 215, 172, .35); animation: core-pulse 2.2s ease-in-out infinite; }
+.compass-core img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.02); }
+.portrait-scanline { position: absolute; inset: -20% 0 auto; height: 32%; border-bottom: 1px solid rgba(114, 240, 204, .85); background: rgba(114, 240, 204, .12); animation: portrait-scan 2.6s ease-in-out infinite; }
 @keyframes compass-spin { to { transform: rotate(360deg); } }
 @keyframes compass-spin-reverse { to { transform: rotate(-360deg); } }
-@keyframes core-pulse { 50% { transform: scale(.9); opacity: .78; } }
+@keyframes core-pulse { 50% { transform: scale(.97); box-shadow: 0 0 0 7px rgba(7, 16, 15, .88), 0 0 0 9px rgba(230, 167, 46, .6), 0 0 72px rgba(67, 215, 172, .48); } }
+@keyframes halo-pulse { 50% { opacity: .58; transform: scale(.98); } }
+@keyframes dot-pulse { 50% { opacity: .36; transform: scale(.65); } }
+@keyframes portrait-scan { 0% { top: -32%; } 55%, 100% { top: 100%; } }
 .loading-copy { width: min(100%, 520px); }
 .loading-kicker { margin-bottom: 18px; color: #6ce4c1 !important; font-size: 10px !important; font-weight: 900; }
 .loading-copy h2 { min-height: 50px; margin-bottom: 12px; color: #fff; font-family: "STSong", "Songti SC", serif; font-size: 30px; line-height: 1.4; }

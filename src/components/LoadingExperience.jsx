@@ -1,7 +1,6 @@
-import { Sparkles } from "lucide-react";
-
 export const MIN_LOADING_MS = 20_000;
-export const WAITING_PROGRESS = 92;
+export const ANALYSIS_TIMEOUT_MS = 24_000;
+export const WAITING_PROGRESS = 98;
 
 const PHASES = [
   { until: 24, title: "正在整理六项本人自述", detail: "将你的主动选择编排为清晰的观察维度" },
@@ -13,8 +12,12 @@ const PHASES = [
 
 export function progressAt(elapsedMs) {
   if (elapsedMs <= 0) return 1;
-  const ratio = Math.min(elapsedMs / MIN_LOADING_MS, 1);
-  return Math.min(WAITING_PROGRESS, Math.max(1, Math.round(1 + 91 * (1 - ((1 - ratio) ** 2.1)))));
+  if (elapsedMs <= MIN_LOADING_MS) {
+    const ratio = elapsedMs / MIN_LOADING_MS;
+    return Math.max(1, Math.round(1 + 91 * (1 - ((1 - ratio) ** 2.1))));
+  }
+  const finishingRatio = Math.min((elapsedMs - MIN_LOADING_MS) / (ANALYSIS_TIMEOUT_MS - MIN_LOADING_MS), 1);
+  return Math.min(WAITING_PROGRESS, 92 + Math.round(finishingRatio * 6));
 }
 
 export function phaseFor(progress) {
@@ -27,12 +30,21 @@ export default function LoadingExperience({ progress }) {
   return (
     <div className="loading-stage" role="status" aria-live="polite" aria-label={`报告生成进度 ${progress}%`}>
       <div className="compass" aria-hidden="true">
+        <span className="compass-halo" />
+        <span className="compass-scan" />
         <span className="compass-ring ring-one" />
         <span className="compass-ring ring-two" />
         <span className="compass-ring ring-three" />
+        <span className="compass-ring ring-four" />
+        <span className="orbit-dot dot-one" />
+        <span className="orbit-dot dot-two" />
+        <span className="orbit-dot dot-three" />
         <span className="compass-axis axis-one" />
         <span className="compass-axis axis-two" />
-        <span className="compass-core"><Sparkles size={28} /></span>
+        <span className="compass-core">
+          <img src="/pan-professor-avatar.png" alt="" />
+          <span className="portrait-scanline" />
+        </span>
       </div>
       <div className="loading-copy">
         <p className="loading-kicker">SU HUA · VISUAL REPORT</p>
@@ -43,7 +55,7 @@ export default function LoadingExperience({ progress }) {
         </div>
         <div className="loading-meta">
           <strong>{progress}%</strong>
-          <span>{progress === WAITING_PROGRESS ? "正在完成视觉卡" : "请保持页面开启"}</span>
+          <span>{progress >= 92 ? "正在完成视觉卡" : "请保持页面开启"}</span>
         </div>
       </div>
     </div>

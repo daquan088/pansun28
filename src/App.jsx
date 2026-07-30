@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, ShieldCheck } from "lucide-react";
-import LoadingExperience, { MIN_LOADING_MS, progressAt } from "./components/LoadingExperience";
+import LoadingExperience, { ANALYSIS_TIMEOUT_MS, MIN_LOADING_MS, progressAt } from "./components/LoadingExperience";
 import ProgressSidebar from "./components/ProgressSidebar";
 import StatusForm, { STATUS_GROUPS } from "./components/StatusForm";
 import UploadField from "./components/UploadField";
@@ -41,7 +41,23 @@ export function parseAnalyzeResponse(payload) {
   ) {
     throw new Error("服务返回的数据不完整，请重新生成。");
   }
-  return { image: payload.image, ...advice, contact };
+  return { image: payload.image, imageMode: "generated", ...advice, contact };
+}
+
+export function createFallbackResult(previewUrl) {
+  return {
+    image: previewUrl,
+    imageMode: "uploaded",
+    praise: "你愿意停下来观察自己的日常状态，本身就是很好的开始。",
+    suggestions: [],
+    cta: "如需结合日常饮食与生活节律进一步交流，可添加潘教授微信进行一对一沟通。",
+    disclaimer: "内容仅作日常食养与生活方式参考。",
+    contact: {
+      wechatId: "pansun28",
+      qrUrl: "/pansun28-wechat.png",
+      label: "扫码获取微信号",
+    },
+  };
 }
 
 function wait(ms) {
@@ -121,16 +137,45 @@ export default function App() {
     }, 80);
 
     try {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        body: createAnalyzeFormData(photo, states),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const apiMessage = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
-        throw new Error(apiMessage || payload?.message || "生成失败，请稍后重试。");
+      let parsedResult;
+      const controller = new AbortController();
+      let requestTimeout;
+      try {
+        const response = await Promise.race([
+          fetch("/api/analyze", {
+            method: "POST",
+            body: createAnalyzeFormData(photo, states),
+            signal: controller.signal,
+          }),
+          new Promise((_, reject) => {
+            requestTimeout = window.setTimeout(() => {
+              controller.abort();
+              const timeoutError = new Error("图像服务响应超时");
+              timeoutError.name = "AbortError";
+              reject(timeoutError);
+            }, ANALYSIS_TIMEOUT_MS);
+          }),
+        ]);
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          if (response.status === 429 || response.status >= 500) {
+            parsedResult = createFallbackResult(previewUrl);
+          } else {
+            const apiMessage = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+            throw new Error(apiMessage || payload?.message || "生成失败，请稍后重试。");
+          }
+        } else {
+          parsedResult = parseAnalyzeResponse(payload);
+        }
+      } catch (requestError) {
+        if (requestError.name === "AbortError" || requestError instanceof TypeError) {
+          parsedResult = createFallbackResult(previewUrl);
+        } else {
+          throw requestError;
+        }
+      } finally {
+        window.clearTimeout(requestTimeout);
       }
-      const parsedResult = parseAnalyzeResponse(payload);
       const remaining = Math.max(0, MIN_LOADING_MS - (performance.now() - startedAt));
       await wait(remaining);
       window.clearInterval(progressTimer);
