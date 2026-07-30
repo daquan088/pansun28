@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@eslint/js": "latest",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.0",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
     "@types/react": "latest",
