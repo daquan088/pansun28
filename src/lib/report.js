@@ -190,6 +190,34 @@ function buildHighlights(dimensions) {
   return strongDimensions.map(({ label, note }) => `${label}：${note}`);
 }
 
+function buildAnalytics(dimensions, overall) {
+  const scores = dimensions.map(({ score }) => score);
+  const highest = dimensions.reduce((current, dimension) =>
+    dimension.score > current.score ? dimension : current
+  );
+  const lowest = dimensions.reduce((current, dimension) =>
+    dimension.score < current.score ? dimension : current
+  );
+  const spread = Math.max(...scores) - Math.min(...scores);
+
+  return Object.freeze({
+    balance: Math.max(0, 100 - spread),
+    steadyCount: dimensions.filter(({ score }) => score >= 80).length,
+    attentionCount: dimensions.filter(({ score }) => score < 60).length,
+    strongest: spread === 0 ? "六维较均衡" : highest.label,
+    focus: spread === 0 ? "保持整体节奏" : lowest.label,
+    comparison: Object.freeze(dimensions.map((dimension) => Object.freeze({
+      label: dimension.label
+        .replace("自我感受", "感受")
+        .replace("排便节奏", "排便")
+        .replace("肠道舒适", "肠道"),
+      score: dimension.score,
+      average: overall,
+      color: dimension.color
+    })))
+  });
+}
+
 export function buildVisualReport(answers) {
   const source = getAnswersSource(answers);
   const resolved = DIMENSION_DEFINITIONS.map((definition) => ({
@@ -217,6 +245,7 @@ export function buildVisualReport(answers) {
     praise,
     highlights: Object.freeze(buildHighlights(dimensions)),
     suggestions: Object.freeze(resolved.map(({ state }) => state.suggestion)),
+    analytics: buildAnalytics(dimensions, overall),
     disclaimer: DISCLAIMER
   });
 }

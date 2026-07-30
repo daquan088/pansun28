@@ -31,11 +31,14 @@ export default function LoadingExperience({ progress }) {
     <div className="loading-stage" role="status" aria-live="polite" aria-label={`报告生成进度 ${progress}%`}>
       <div className="compass" aria-hidden="true">
         <span className="compass-halo" />
+        <span className="spectrum-ring" />
+        <span className="tick-ring" />
         <span className="compass-scan" />
         <span className="compass-ring ring-one" />
         <span className="compass-ring ring-two" />
         <span className="compass-ring ring-three" />
         <span className="compass-ring ring-four" />
+        <span className="compass-ring ring-five" />
         <span className="orbit-dot dot-one" />
         <span className="orbit-dot dot-two" />
         <span className="orbit-dot dot-three" />

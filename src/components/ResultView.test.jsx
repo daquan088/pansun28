@@ -9,6 +9,12 @@ vi.mock("recharts", () => ({
   PolarGrid: () => null,
   PolarAngleAxis: () => null,
   Radar: () => null,
+  BarChart: ({ children }) => <div>{children}</div>,
+  Bar: ({ children }) => <div>{children}</div>,
+  CartesianGrid: () => null,
+  Cell: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
 }));
 
 import ResultView from "./ResultView";
@@ -40,7 +46,11 @@ describe("ResultView", () => {
     render(<ResultView result={result} answers={answers} onRestart={() => {}} />);
 
     expect(screen.getByLabelText("六维本人自述雷达图")).toBeInTheDocument();
-    expect(screen.getByText("综合观察值")).toBeInTheDocument();
+    expect(screen.getAllByText("综合观察值")).toHaveLength(2);
+    expect(screen.getByText("六维状态罗盘")).toBeInTheDocument();
+    expect(screen.getByLabelText("六个自述维度与个人六维均值的竖向柱状对比图")).toBeInTheDocument();
+    expect(screen.getByText("状态分布指标")).toBeInTheDocument();
+    expect(screen.getByText(/不是医学标准/)).toBeInTheDocument();
     expect(screen.getByText("请把专业支持放在优先位置")).toBeInTheDocument();
     expect(screen.getByText("扫码获取微信号")).toBeInTheDocument();
     expect(screen.getAllByText(/pansun28/).length).toBeGreaterThan(0);

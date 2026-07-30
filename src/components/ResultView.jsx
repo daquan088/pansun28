@@ -12,11 +12,17 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
   PolarAngleAxis,
   PolarGrid,
   Radar,
   RadarChart,
   ResponsiveContainer,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { buildVisualReport } from "../lib/report.js";
 
@@ -126,15 +132,63 @@ export default function ResultView({ result, answers, onRestart }) {
           </div>
         </section>
 
+        <section className="analytics-section" aria-labelledby="analytics-title">
+          <div className="section-heading analytics-heading">
+            <span>02</span><div><small>数据分析</small><h2 id="analytics-title">六维自述分析仪表</h2></div>
+          </div>
+          <div className="analytics-grid">
+            <article className="analysis-panel compass-panel">
+              <div className="analysis-panel-title"><small>OVERALL COMPASS</small><h3>六维状态罗盘</h3></div>
+              <div className="score-compass" style={{ "--score": `${report.overall * 3.6}deg` }}>
+                <div className="score-compass-inner"><strong>{report.overall}</strong><span>综合观察值</span></div>
+              </div>
+              <div className="compass-legend">
+                {report.dimensions.map((dimension) => (
+                  <span key={dimension.id}><i style={{ backgroundColor: dimension.color }} />{dimension.label}<b>{dimension.score}</b></span>
+                ))}
+              </div>
+            </article>
+
+            <article className="analysis-panel comparison-panel">
+              <div className="analysis-panel-title"><small>PERSONAL COMPARISON</small><h3>维度与个人均值对比</h3></div>
+              <div className="comparison-chart" aria-label="六个自述维度与个人六维均值的竖向柱状对比图">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={report.analytics.comparison} margin={{ top: 18, right: 4, left: -20, bottom: 4 }}>
+                    <CartesianGrid vertical={false} stroke="rgba(197, 224, 217, 0.12)" />
+                    <XAxis dataKey="label" interval={0} tick={{ fill: "#9aada7", fontSize: 8 }} tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: "#70857f", fontSize: 8 }} tickLine={false} axisLine={false} />
+                    <Bar dataKey="score" name="维度自述值" radius={[3, 3, 0, 0]} maxBarSize={18} isAnimationActive={false}>
+                      {report.analytics.comparison.map((item) => <Cell key={item.label} fill={item.color} />)}
+                    </Bar>
+                    <Bar dataKey="average" name="个人六维均值" fill="#4cd5ad" fillOpacity={0.48} radius={[3, 3, 0, 0]} maxBarSize={12} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="chart-legend"><span><i className="legend-spectrum" />维度自述值</span><span><i className="legend-average" />个人六维均值</span></div>
+            </article>
+
+            <article className="analysis-panel metrics-panel">
+              <div className="analysis-panel-title"><small>DATA SUMMARY</small><h3>状态分布指标</h3></div>
+              <div className="metric-list">
+                <div className="metric-primary"><span>六维均衡度</span><strong>{report.analytics.balance}<small>/100</small></strong><div><i style={{ width: `${report.analytics.balance}%` }} /></div></div>
+                <div className="metric-pair"><span><small>稳定项</small><strong>{report.analytics.steadyCount}<i>/6</i></strong></span><span><small>关注项</small><strong>{report.analytics.attentionCount}<i>/6</i></strong></span></div>
+                <div className="metric-focus"><span>当前相对优势</span><strong>{report.analytics.strongest}</strong></div>
+                <div className="metric-focus is-focus"><span>建议优先关注</span><strong>{report.analytics.focus}</strong></div>
+              </div>
+              <p className="analysis-note">均衡度反映六项自述分数的分布差异；对比基准为你本人的六维均值，不是医学标准。</p>
+            </article>
+          </div>
+        </section>
+
         <section className="insight-section">
           <div className="praise-panel">
-            <span className="section-number">02 · 今日寄语</span>
+            <span className="section-number">03 · 今日寄语</span>
             <blockquote>{report.praise}</blockquote>
             <p>{result.praise}</p>
           </div>
           <div className="suggestion-panel">
             <div className="section-heading compact">
-              <span>03</span><div><small>日常起点</small><h2>给你的食养建议</h2></div>
+              <span>04</span><div><small>日常起点</small><h2>给你的食养建议</h2></div>
             </div>
             <div className="suggestion-list">
               {report.suggestions.map((suggestion, index) => (

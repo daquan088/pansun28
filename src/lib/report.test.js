@@ -27,12 +27,18 @@ describe("buildVisualReport", () => {
       "praise",
       "highlights",
       "suggestions",
+      "analytics",
       "disclaimer"
     ]);
     expect(report.dimensions.map(({ id }) => id)).toEqual(Object.keys(OPTIONS));
     expect(report.dimensions).toHaveLength(6);
     expect(report.suggestions).toHaveLength(6);
     expect(report.highlights.length).toBeGreaterThan(0);
+    expect(report.analytics.comparison).toHaveLength(6);
+    expect(report.analytics.balance).toBe(100);
+    expect(report.analytics.steadyCount).toBe(6);
+    expect(report.analytics.strongest).toBe("六维较均衡");
+    expect(report.analytics.focus).toBe("保持整体节奏");
 
     for (const dimension of report.dimensions) {
       expect(Object.keys(dimension)).toEqual(["id", "label", "score", "color", "note"]);
@@ -40,6 +46,21 @@ describe("buildVisualReport", () => {
       expect(dimension.color).toMatch(/^#[0-9A-F]{6}$/i);
       expect(dimension.note).not.toBe("");
     }
+  });
+
+  it("derives comparison and balance analytics only from self-reported dimensions", () => {
+    const report = buildVisualReport({
+      ...MIDDLE_ANSWERS,
+      bowelRhythm: BEST_ANSWERS.bowelRhythm,
+      mood: LOW_ANSWERS.mood
+    });
+
+    expect(report.analytics.balance).toBe(54);
+    expect(report.analytics.steadyCount).toBe(1);
+    expect(report.analytics.attentionCount).toBe(1);
+    expect(report.analytics.strongest).toBe("排便节奏");
+    expect(report.analytics.focus).toBe("情绪活力");
+    expect(report.analytics.comparison.every(({ average }) => average === report.overall)).toBe(true);
   });
 
   it("covers every selectable state with a distinct ordered score", () => {
