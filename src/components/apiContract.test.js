@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAnalyzeFormData, createFallbackResult, parseAnalyzeResponse } from "../App";
+import { createAnalyzeFormData, createFallbackResult, isStaticDeployment, parseAnalyzeResponse } from "../App";
 
 describe("analyze API contract", () => {
   it("creates the expected multipart fields", () => {
@@ -52,6 +52,11 @@ describe("analyze API contract", () => {
     expect(result.imageMode).toBe("uploaded");
     expect(result.contact.wechatId).toBe("pansun28");
     expect(result.cta).toContain("潘教授");
+  });
+
+  it("detects GitHub Pages as a static deployment", () => {
+    expect(isStaticDeployment("daquan0011.github.io")).toBe(true);
+    expect(isStaticDeployment("127.0.0.1")).toBe(false);
   });
 
   it("rejects incomplete responses", () => {

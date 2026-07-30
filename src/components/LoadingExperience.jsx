@@ -26,6 +26,7 @@ export function phaseFor(progress) {
 
 export default function LoadingExperience({ progress }) {
   const phase = phaseFor(progress);
+  const professorAvatarUrl = `${import.meta.env.BASE_URL}pan-professor-avatar.png`;
 
   return (
     <div className="loading-stage" role="status" aria-live="polite" aria-label={`报告生成进度 ${progress}%`}>
@@ -45,7 +46,7 @@ export default function LoadingExperience({ progress }) {
         <span className="compass-axis axis-one" />
         <span className="compass-axis axis-two" />
         <span className="compass-core">
-          <img src="/pan-professor-avatar.png" alt="" />
+          <img src={professorAvatarUrl} alt="" />
           <span className="portrait-scanline" />
         </span>
       </div>

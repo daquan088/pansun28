@@ -54,10 +54,14 @@ export function createFallbackResult(previewUrl) {
     disclaimer: "内容仅作日常食养与生活方式参考。",
     contact: {
       wechatId: "pansun28",
-      qrUrl: "/pansun28-wechat.png",
+      qrUrl: `${import.meta.env.BASE_URL}pansun28-wechat.png`,
       label: "扫码获取微信号",
     },
   };
+}
+
+export function isStaticDeployment(hostname = window.location.hostname) {
+  return hostname.endsWith(".github.io");
 }
 
 function wait(ms) {
@@ -141,31 +145,35 @@ export default function App() {
       const controller = new AbortController();
       let requestTimeout;
       try {
-        const response = await Promise.race([
-          fetch("/api/analyze", {
-            method: "POST",
-            body: createAnalyzeFormData(photo, states),
-            signal: controller.signal,
-          }),
-          new Promise((_, reject) => {
-            requestTimeout = window.setTimeout(() => {
-              controller.abort();
-              const timeoutError = new Error("图像服务响应超时");
-              timeoutError.name = "AbortError";
-              reject(timeoutError);
-            }, ANALYSIS_TIMEOUT_MS);
-          }),
-        ]);
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          if (response.status === 429 || response.status >= 500) {
-            parsedResult = createFallbackResult(previewUrl);
-          } else {
-            const apiMessage = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
-            throw new Error(apiMessage || payload?.message || "生成失败，请稍后重试。");
-          }
+        if (isStaticDeployment()) {
+          parsedResult = createFallbackResult(previewUrl);
         } else {
-          parsedResult = parseAnalyzeResponse(payload);
+          const response = await Promise.race([
+            fetch("/api/analyze", {
+              method: "POST",
+              body: createAnalyzeFormData(photo, states),
+              signal: controller.signal,
+            }),
+            new Promise((_, reject) => {
+              requestTimeout = window.setTimeout(() => {
+                controller.abort();
+                const timeoutError = new Error("图像服务响应超时");
+                timeoutError.name = "AbortError";
+                reject(timeoutError);
+              }, ANALYSIS_TIMEOUT_MS);
+            }),
+          ]);
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) {
+            if (response.status === 429 || response.status >= 500) {
+              parsedResult = createFallbackResult(previewUrl);
+            } else {
+              const apiMessage = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+              throw new Error(apiMessage || payload?.message || "生成失败，请稍后重试。");
+            }
+          } else {
+            parsedResult = parseAnalyzeResponse(payload);
+          }
         }
       } catch (requestError) {
         if (requestError.name === "AbortError" || requestError instanceof TypeError) {
