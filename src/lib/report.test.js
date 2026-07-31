@@ -10,8 +10,22 @@ const OPTIONS = Object.freeze({
   mood: ["情绪活力较好", "偶有低落或提不起劲", "持续低落"]
 });
 
+const SUPPLEMENT_OPTIONS = Object.freeze({
+  bowelEase: ["大多轻松，不需久蹲", "偶尔费力或有排不尽感", "经常费力、久蹲或有排不尽感"],
+  postMealGut: ["餐后大多舒适", "偶尔出现胀气或咕噜感", "经常出现胀气、咕噜或不适"],
+  complexionPattern: ["整体较稳定", "作息不规律后偶尔偏暗", "持续自觉偏暗或偏黄"]
+});
+
+const SUPPLEMENT_BY_DIMENSION = Object.freeze({
+  bowelRhythm: "bowelEase",
+  gutComfort: "postMealGut",
+  complexionSelfReport: "complexionPattern"
+});
+
+const ALL_OPTIONS = Object.freeze({ ...OPTIONS, ...SUPPLEMENT_OPTIONS });
+
 const answersAt = (index) =>
-  Object.freeze(Object.fromEntries(Object.entries(OPTIONS).map(([id, options]) => [id, options[index]])));
+  Object.freeze(Object.fromEntries(Object.entries(ALL_OPTIONS).map(([id, options]) => [id, options[index]])));
 
 const BEST_ANSWERS = answersAt(0);
 const MIDDLE_ANSWERS = answersAt(1);
@@ -52,6 +66,7 @@ describe("buildVisualReport", () => {
     const report = buildVisualReport({
       ...MIDDLE_ANSWERS,
       bowelRhythm: BEST_ANSWERS.bowelRhythm,
+      bowelEase: BEST_ANSWERS.bowelEase,
       mood: LOW_ANSWERS.mood
     });
 
@@ -66,12 +81,33 @@ describe("buildVisualReport", () => {
   it("covers every selectable state with a distinct ordered score", () => {
     for (const [id, options] of Object.entries(OPTIONS)) {
       const scores = options.map((option) => {
-        const report = buildVisualReport({ ...MIDDLE_ANSWERS, [id]: option });
+        const supplementId = SUPPLEMENT_BY_DIMENSION[id];
+        const report = buildVisualReport({
+          ...MIDDLE_ANSWERS,
+          [id]: option,
+          ...(supplementId ? { [supplementId]: SUPPLEMENT_OPTIONS[supplementId][options.indexOf(option)] } : {})
+        });
         return report.dimensions.find((dimension) => dimension.id === id).score;
       });
 
       expect(scores).toEqual([90, 68, 44]);
       expect(new Set(scores).size).toBe(options.length);
+    }
+  });
+
+  it("uses the three follow-up answers in their related report dimensions", () => {
+    const cases = [
+      ["bowelEase", "bowelRhythm"],
+      ["postMealGut", "gutComfort"],
+      ["complexionPattern", "complexionSelfReport"]
+    ];
+
+    for (const [answerId, dimensionId] of cases) {
+      const scores = SUPPLEMENT_OPTIONS[answerId].map((option) =>
+        buildVisualReport({ ...MIDDLE_ANSWERS, [answerId]: option })
+          .dimensions.find(({ id }) => id === dimensionId).score
+      );
+      expect(scores).toEqual([79, 68, 56]);
     }
   });
 
@@ -186,6 +222,7 @@ describe("buildVisualReport", () => {
       expect(generatedCopy).not.toContain(term);
     }
     expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("主动选择");
+    expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("九项近期自述");
     expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("照片只用于视觉展示");
     expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("不参与任何状态判断");
   });

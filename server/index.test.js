@@ -14,8 +14,11 @@ let inputPng;
 let generatedPng;
 const validAnswers = {
   bowelRhythm: "规律",
+  bowelEase: "大多轻松",
   gutComfort: "舒适",
+  postMealGut: "餐后舒适",
   complexionSelfReport: "气色正常",
+  complexionPattern: "整体稳定",
   sleep: "睡眠不足",
   stress: "压力较高",
   mood: "平稳",

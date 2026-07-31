@@ -71,7 +71,7 @@ export default function ResultView({ result, answers, onRestart }) {
     <section className="result-view">
       <header className="result-header">
         <div>
-          <p className="eyebrow">REPORT COMPLETE · 六维本人自述</p>
+          <p className="eyebrow">REPORT COMPLETE · 九项自述六维汇总</p>
           <h1>你的食养状态光谱</h1>
         </div>
         <button className="icon-button" type="button" onClick={onRestart} title="重新生成" aria-label="重新生成">
@@ -96,7 +96,7 @@ export default function ResultView({ result, answers, onRestart }) {
             <div className="report-brand"><Sparkles size={17} /><span>SELF-REPORTED SPECTRUM</span></div>
             <div className="overall-row">
               <div><strong>{report.overall}</strong><span>/ 100</span></div>
-              <p>综合观察值<small>由六项本人自述等权汇总</small></p>
+              <p>综合观察值<small>由九项本人自述汇总为六维</small></p>
             </div>
             <div className="radar-wrap" aria-label="六维本人自述雷达图">
               <ResponsiveContainer width="100%" height="100%">
@@ -175,7 +175,7 @@ export default function ResultView({ result, answers, onRestart }) {
                 <div className="metric-focus"><span>当前相对优势</span><strong>{report.analytics.strongest}</strong></div>
                 <div className="metric-focus is-focus"><span>建议优先关注</span><strong>{report.analytics.focus}</strong></div>
               </div>
-              <p className="analysis-note">均衡度反映六项自述分数的分布差异；对比基准为你本人的六维均值，不是医学标准。</p>
+              <p className="analysis-note">均衡度反映六个汇总维度的分布差异；对比基准为你本人的六维均值，不是医学标准。</p>
             </article>
           </div>
         </section>

@@ -19,8 +19,11 @@ const WECHAT_ID_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{5,19}$/;
 const CONTACT_LABEL = "扫码获取微信号";
 const ANSWER_KEYS = [
   "bowelRhythm",
+  "bowelEase",
   "gutComfort",
+  "postMealGut",
   "complexionSelfReport",
+  "complexionPattern",
   "sleep",
   "stress",
   "mood",
@@ -59,7 +62,7 @@ function parseJsonField(value, fieldName) {
 
 function validateAnswers(value) {
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是包含固定六项的对象。");
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须是包含固定九项的对象。");
   }
 
   const keys = Object.keys(value);
@@ -67,7 +70,7 @@ function validateAnswers(value) {
     && ANSWER_KEYS.every((key) => Object.hasOwn(value, key));
   const hasStringValues = hasExactKeys && ANSWER_KEYS.every((key) => typeof value[key] === "string");
   if (!hasStringValues) {
-    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含固定六项且每项均为字符串。");
+    throw new ApiError(400, "INVALID_ANSWERS", "answers 必须包含固定九项且每项均为字符串。");
   }
   return value;
 }

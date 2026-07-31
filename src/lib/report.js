@@ -5,6 +5,27 @@ const DIMENSION_DEFINITIONS = Object.freeze([
     color: "#B7791F",
     fallback: "偶尔不够规律",
     aliases: Object.freeze({ 便秘: "排便不够规律", 经常不规律或排便费力: "排便不够规律" }),
+    supplement: Object.freeze({
+      id: "bowelEase",
+      fallback: "偶尔费力或有排不尽感",
+      states: Object.freeze({
+        "大多轻松，不需久蹲": Object.freeze({
+          score: 90,
+          note: "排便过程大多轻松。",
+          suggestion: "继续保留从容的如厕时间，并维持规律饮水与用餐。"
+        }),
+        "偶尔费力或有排不尽感": Object.freeze({
+          score: 68,
+          note: "排便时偶尔费力或有排不尽感。",
+          suggestion: "记录饮水、蔬菜全谷物摄入与排便感受，观察更适合自己的节奏。"
+        }),
+        "经常费力、久蹲或有排不尽感": Object.freeze({
+          score: 44,
+          note: "排便时经常费力、久蹲或有排不尽感。",
+          suggestion: "避免长期久蹲和过度用力；若这种感受持续影响生活，请咨询专业人员。"
+        })
+      })
+    }),
     states: Object.freeze({
       规律顺畅: Object.freeze({
         score: 90,
@@ -29,6 +50,27 @@ const DIMENSION_DEFINITIONS = Object.freeze([
     color: "#178F83",
     fallback: "偶有胀闷",
     aliases: Object.freeze({ 偶有胀满: "偶有胀闷", 经常胀满或不适: "经常感觉不舒适" }),
+    supplement: Object.freeze({
+      id: "postMealGut",
+      fallback: "偶尔出现胀气或咕噜感",
+      states: Object.freeze({
+        餐后大多舒适: Object.freeze({
+          score: 90,
+          note: "餐后腹部大多感觉舒适。",
+          suggestion: "延续目前让自己感觉舒适的餐量、食物搭配与进食速度。"
+        }),
+        偶尔出现胀气或咕噜感: Object.freeze({
+          score: 68,
+          note: "餐后偶尔出现胀气或咕噜感。",
+          suggestion: "尝试放慢进食速度并记录餐量与餐后感受，寻找更舒适的安排。"
+        }),
+        "经常出现胀气、咕噜或不适": Object.freeze({
+          score: 44,
+          note: "餐后经常出现胀气、咕噜或不适。",
+          suggestion: "先记录食物、餐量和餐后反应；若持续影响进食或生活，请寻求专业支持。"
+        })
+      })
+    }),
     states: Object.freeze({
       大多舒适: Object.freeze({
         score: 90,
@@ -56,6 +98,27 @@ const DIMENSION_DEFINITIONS = Object.freeze([
       脸黄: "自觉气色偏暗或偏黄",
       自觉偏暗或偏黄: "自觉气色偏暗或偏黄",
       自觉明亮有精神: "自觉气色明亮"
+    }),
+    supplement: Object.freeze({
+      id: "complexionPattern",
+      fallback: "作息不规律后偶尔偏暗",
+      states: Object.freeze({
+        整体较稳定: Object.freeze({
+          score: 90,
+          note: "近期自觉面部气色整体较稳定。",
+          suggestion: "继续保持规律饮食、饮水和休息，并以自己的连续观察为准。"
+        }),
+        作息不规律后偶尔偏暗: Object.freeze({
+          score: 68,
+          note: "作息不规律后偶尔自觉气色偏暗。",
+          suggestion: "先连续记录几天作息、三餐和自觉气色变化，不依据单次外观下结论。"
+        }),
+        持续自觉偏暗或偏黄: Object.freeze({
+          score: 44,
+          note: "近期持续自觉面部气色偏暗或偏黄。",
+          suggestion: "把气色变化与作息、饮食一并记录；若持续或伴随明显不适，请咨询专业人员。"
+        })
+      })
     }),
     states: Object.freeze({
       自觉气色明亮: Object.freeze({
@@ -161,7 +224,7 @@ const PRAISE = Object.freeze({
 });
 
 const DISCLAIMER =
-  "本报告仅根据你主动选择的六项近期自述生成。照片只用于视觉展示，不参与任何状态判断；内容仅作日常食养与生活记录参考，不能替代心理或医疗专业支持。";
+  "本报告仅根据你主动选择的九项近期自述汇总为六个观察维度。照片只用于视觉展示，不参与任何状态判断；内容仅作日常食养与生活记录参考，不能替代心理或医疗专业支持。";
 
 function getAnswersSource(answers) {
   return answers !== null && typeof answers === "object" && !Array.isArray(answers)
@@ -184,10 +247,17 @@ function buildHighlights(dimensions) {
   const strongDimensions = dimensions.filter(({ score }) => score >= 80);
 
   if (strongDimensions.length === 0) {
-    return ["你已完成六项近期状态记录，为接下来的日常安排提供了清晰起点。"];
+    return ["你已完成九项近期状态记录，为接下来的日常安排提供了清晰起点。"];
   }
 
   return strongDimensions.map(({ label, note }) => `${label}：${note}`);
+}
+
+function resolveSupplementState(definition, source) {
+  if (!definition.supplement) return null;
+  const { id, fallback, states } = definition.supplement;
+  const selected = source[id];
+  return Object.hasOwn(states, selected) ? states[selected] : states[fallback];
 }
 
 function buildAnalytics(dimensions, overall) {
@@ -222,15 +292,16 @@ export function buildVisualReport(answers) {
   const source = getAnswersSource(answers);
   const resolved = DIMENSION_DEFINITIONS.map((definition) => ({
     definition,
-    state: resolveState(definition, source)
+    state: resolveState(definition, source),
+    supplementState: resolveSupplementState(definition, source)
   }));
-  const dimensions = resolved.map(({ definition, state }) =>
+  const dimensions = resolved.map(({ definition, state, supplementState }) =>
     Object.freeze({
       id: definition.id,
       label: definition.label,
-      score: state.score,
+      score: supplementState ? Math.round((state.score + supplementState.score) / 2) : state.score,
       color: definition.color,
-      note: state.note
+      note: supplementState ? `${state.note} ${supplementState.note}` : state.note
     })
   );
   const overall = Math.round(
@@ -244,7 +315,11 @@ export function buildVisualReport(answers) {
     dimensions: Object.freeze(dimensions),
     praise,
     highlights: Object.freeze(buildHighlights(dimensions)),
-    suggestions: Object.freeze(resolved.map(({ state }) => state.suggestion)),
+    suggestions: Object.freeze(resolved.map(({ state, supplementState }) =>
+      supplementState && supplementState.score < state.score
+        ? supplementState.suggestion
+        : state.suggestion
+    )),
     analytics: buildAnalytics(dimensions, overall),
     disclaimer: DISCLAIMER
   });

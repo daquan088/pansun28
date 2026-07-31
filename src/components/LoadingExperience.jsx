@@ -3,7 +3,7 @@ export const ANALYSIS_TIMEOUT_MS = 24_000;
 export const WAITING_PROGRESS = 98;
 
 const PHASES = [
-  { until: 24, title: "正在整理六项本人自述", detail: "将你的主动选择编排为清晰的观察维度" },
+  { until: 24, title: "正在整理九项本人自述", detail: "将九项主动选择汇总为六个观察维度" },
   { until: 52, title: "正在绘制六维状态光谱", detail: "让每项近期感受在同一视图中呈现" },
   { until: 78, title: "正在组织食养建议", detail: "结合自述生成可以从日常开始的小行动" },
   { until: 91, title: "正在渲染专属视觉报告", detail: "生成肖像与报告版式需要一点时间" },

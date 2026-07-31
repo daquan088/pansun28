@@ -12,7 +12,7 @@ const ResultView = lazy(loadResultView);
 
 const STEP_COPY = [
   { title: "上传自拍", description: "用于生成视觉肖像" },
-  { title: "六项自述", description: "记录最近一周感受" },
+  { title: "九项自述", description: "记录最近一周感受" },
   { title: "确认生成", description: "确认信息使用边界" },
   { title: "状态报告", description: "查看六维观察结果" },
 ];
@@ -119,7 +119,7 @@ export default function App() {
       return;
     }
     if (step === 1 && completedStates !== STATUS_GROUPS.length) {
-      setError("请完成全部六项本人自述后继续。");
+      setError("请完成全部九项本人自述后继续。");
       return;
     }
     setStep((current) => Math.min(current + 1, 2));
@@ -223,7 +223,7 @@ export default function App() {
               <h1>{STEP_COPY[step].title}</h1>
               <p>
                 {step === 0 && "照片仅用于生成报告中的视觉肖像，不用于任何健康推断。"}
-                {step === 1 && "用六项本人自述记录近期节奏，所有结果均来自你的主动选择。"}
+                {step === 1 && "用九项本人自述记录近期节奏，并汇总为六个观察维度。"}
                 {step === 2 && "确认照片和自述的使用边界，生成你的六维状态报告。"}
               </p>
             </header>
@@ -237,7 +237,7 @@ export default function App() {
               <div className="confirm-summary">
                 <img src={previewUrl} alt="待生成视觉肖像的自拍预览" />
                 <div>
-                  <span className="summary-kicker"><Check size={16} /> 六项自述已就绪</span>
+                  <span className="summary-kicker"><Check size={16} /> 九项自述已就绪</span>
                   <h2 id="confirm-title">确认报告信息边界</h2>
                   <p>报告仅依据本人自述生成；照片只用于生成视觉肖像，不参与健康推断。</p>
                 </div>

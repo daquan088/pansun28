@@ -6,8 +6,11 @@ describe("analyze API contract", () => {
     const photo = new Blob(["photo"], { type: "image/jpeg" });
     const answers = {
       bowelRhythm: "规律顺畅",
+      bowelEase: "大多轻松，不需久蹲",
       gutComfort: "大多舒适",
+      postMealGut: "餐后大多舒适",
       complexionSelfReport: "自觉气色明亮",
+      complexionPattern: "整体较稳定",
       sleep: "精神比较充足",
       stress: "轻松平稳",
       mood: "情绪活力较好",
