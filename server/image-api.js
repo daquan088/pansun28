@@ -5,6 +5,8 @@ const DEFAULT_MODEL = "gpt-image-2";
 export const IMAGE_TIMEOUT_MS = 125_000;
 const MAX_GENERATED_BYTES = 25 * 1024 * 1024;
 const MAX_API_RESPONSE_BYTES = Math.ceil(MAX_GENERATED_BYTES * 4 / 3) + 1024 * 1024;
+const MAX_PROMPT_CHARS = 2000;
+const MAX_REFERENCE_IMAGES = 4;
 
 const IMAGE_PROMPT = [
   "基于上传照片生成一张自然光下、真实克制的食养生活方式肖像。",
@@ -21,7 +23,7 @@ export class UpstreamImageError extends Error {
   }
 }
 
-function endpointFrom(baseUrl) {
+function endpointFrom(baseUrl, kind = "edits") {
   let url;
   try {
     url = new URL(baseUrl || DEFAULT_BASE_URL);
@@ -34,12 +36,13 @@ function endpointFrom(baseUrl) {
   }
 
   const pathname = url.pathname.replace(/\/+$/, "");
-  if (pathname.endsWith("/v1/images/edits")) {
+  const target = kind === "generations" ? "generations" : "edits";
+  if (pathname.endsWith(`/v1/images/${target}`)) {
     url.pathname = pathname;
   } else if (pathname.endsWith("/v1")) {
-    url.pathname = `${pathname}/images/edits`;
+    url.pathname = `${pathname}/images/${target}`;
   } else {
-    url.pathname = `${pathname}/v1/images/edits`;
+    url.pathname = `${pathname}/v1/images/${target}`;
   }
   url.search = "";
   url.hash = "";
@@ -121,6 +124,97 @@ async function toJpegDataUrl(buffer) {
   }
 }
 
+async function imageFromPayload(payload, fetchImpl, signal) {
+  const result = payload?.data?.[0];
+  const generated = result?.b64_json
+    ? decodeBase64(result.b64_json)
+    : result?.url
+      ? await downloadImage(result.url, fetchImpl, signal)
+      : null;
+
+  if (!generated) {
+    throw new UpstreamImageError();
+  }
+  return await toJpegDataUrl(generated);
+}
+
+function validateReferenceImageUrls(referenceImageUrls) {
+  if (referenceImageUrls === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(referenceImageUrls) || referenceImageUrls.length > MAX_REFERENCE_IMAGES) {
+    throw new UpstreamImageError();
+  }
+
+  return referenceImageUrls.map((urlValue) => {
+    let url;
+    try {
+      url = new URL(urlValue);
+    } catch {
+      throw new UpstreamImageError();
+    }
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      throw new UpstreamImageError();
+    }
+    return url.toString();
+  });
+}
+
+export async function generatePromptImage(prompt, options = {}) {
+  const apiKey = process.env.XIAOJI_API_KEY;
+  if (!apiKey || typeof prompt !== "string" || !prompt.trim() || prompt.length > MAX_PROMPT_CHARS) {
+    throw new UpstreamImageError();
+  }
+
+  const fetchImpl = options.fetchImpl || fetch;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IMAGE_TIMEOUT_MS);
+
+  try {
+    const requestBody = {
+      model: process.env.XIAOJI_IMAGE_MODEL || DEFAULT_MODEL,
+      prompt,
+      size: "1024x1024",
+      quality: "medium",
+      response_format: "b64_json",
+    };
+    const referenceImages = validateReferenceImageUrls(options.referenceImageUrls);
+    if (referenceImages?.length) {
+      requestBody.reference_images = referenceImages;
+    }
+
+    let response;
+    try {
+      response = await fetchImpl(endpointFrom(process.env.XIAOJI_BASE_URL, "generations"), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+    } catch {
+      throw new UpstreamImageError();
+    }
+
+    if (!response.ok) {
+      throw new UpstreamImageError();
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse((await readLimitedBody(response, MAX_API_RESPONSE_BYTES)).toString("utf8"));
+    } catch {
+      throw new UpstreamImageError();
+    }
+
+    return await imageFromPayload(payload, fetchImpl, controller.signal);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function generateLifestyleImage(inputJpeg, options = {}) {
   const apiKey = process.env.XIAOJI_API_KEY;
   if (!apiKey) {
@@ -162,17 +256,7 @@ export async function generateLifestyleImage(inputJpeg, options = {}) {
       throw new UpstreamImageError();
     }
 
-    const result = payload?.data?.[0];
-    const generated = result?.b64_json
-      ? decodeBase64(result.b64_json)
-      : result?.url
-        ? await downloadImage(result.url, fetchImpl, controller.signal)
-        : null;
-
-    if (!generated) {
-      throw new UpstreamImageError();
-    }
-    return await toJpegDataUrl(generated);
+    return await imageFromPayload(payload, fetchImpl, controller.signal);
   } finally {
     clearTimeout(timeout);
   }

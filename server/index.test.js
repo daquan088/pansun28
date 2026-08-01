@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import sharp from "sharp";
 import { createApp } from "./index.js";
-import { IMAGE_TIMEOUT_MS } from "./image-api.js";
+import { generatePromptImage, IMAGE_TIMEOUT_MS, UpstreamImageError } from "./image-api.js";
 
 const originalEnvironment = {
   XIAOJI_API_KEY: process.env.XIAOJI_API_KEY,
@@ -175,6 +175,7 @@ describe("Suhua image API", () => {
     const upstreamFetch = async (url, init) => {
       requestCount += 1;
       if (requestCount === 1) {
+        expect(url.toString()).toBe("https://xiaoji.baziapi.site/v1/images/edits");
         expect(init.body.get("model")).toBe("custom-image-model");
         return Response.json({ data: [{ url: "https://cdn.example.test/result.png" }] });
       }
@@ -190,6 +191,41 @@ describe("Suhua image API", () => {
       expect(body.image).toMatch(/^data:image\/jpeg;base64,/);
     });
     expect(requestCount).toBe(2);
+  });
+
+  it("supports text-to-image generations with optional http reference images", async () => {
+    process.env.XIAOJI_API_KEY = "generation-secret";
+    process.env.XIAOJI_BASE_URL = "https://xiaoji.baziapi.site/v1";
+    process.env.XIAOJI_IMAGE_MODEL = "custom-image-model";
+
+    const image = await generatePromptImage("Create a clean food wellness visual without text.", {
+      referenceImageUrls: ["https://cdn.example.test/reference.jpg"],
+      fetchImpl: async (url, init) => {
+        expect(url.toString()).toBe("https://xiaoji.baziapi.site/v1/images/generations");
+        expect(init.headers.Authorization).toBe("Bearer generation-secret");
+        expect(init.headers["Content-Type"]).toBe("application/json");
+        const body = JSON.parse(init.body);
+        expect(body).toEqual({
+          model: "custom-image-model",
+          prompt: "Create a clean food wellness visual without text.",
+          size: "1024x1024",
+          quality: "medium",
+          response_format: "b64_json",
+          reference_images: ["https://cdn.example.test/reference.jpg"],
+        });
+        return Response.json({ data: [{ b64_json: generatedPng.toString("base64") }] });
+      },
+    });
+
+    expect(image).toMatch(/^data:image\/jpeg;base64,/);
+  });
+
+  it("rejects non-url reference images for generations", async () => {
+    process.env.XIAOJI_API_KEY = "generation-secret";
+    await expect(generatePromptImage("Create a visual.", {
+      referenceImageUrls: ["data:image/jpeg;base64,abc"],
+      fetchImpl: async () => { throw new Error("must not call upstream"); },
+    })).rejects.toBeInstanceOf(UpstreamImageError);
   });
 
   it("rejects processing unless consent is JSON true", async () => {
