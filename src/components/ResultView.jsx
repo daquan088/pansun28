@@ -1,9 +1,7 @@
-import { useMemo, useRef, useState } from "react";
-import { toPng } from "html-to-image";
+import { useMemo, useState } from "react";
 import {
   Check,
   Copy,
-  Download,
   HeartHandshake,
   Leaf,
   MessageCircle,
@@ -29,9 +27,7 @@ import { buildVisualReport } from "../lib/report.js";
 export default function ResultView({ result, answers, onRestart }) {
   const report = useMemo(() => buildVisualReport(answers), [answers]);
   const contact = result.contact;
-  const cardRef = useRef(null);
   const [copied, setCopied] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [actionError, setActionError] = useState("");
   const needsMoodSupport = answers.mood === "持续低落";
   const usesUploadedPhoto = result.imageMode === "uploaded";
@@ -47,26 +43,6 @@ export default function ResultView({ result, answers, onRestart }) {
     }
   }
 
-  async function downloadReport() {
-    setIsDownloading(true);
-    setActionError("");
-    try {
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#091313",
-      });
-      const link = document.createElement("a");
-      link.download = "苏华食养六维状态报告.png";
-      link.href = dataUrl;
-      link.click();
-    } catch {
-      setActionError("报告图片生成失败，请稍后重试。");
-    } finally {
-      setIsDownloading(false);
-    }
-  }
-
   return (
     <section className="result-view">
       <header className="result-header">
@@ -79,7 +55,7 @@ export default function ResultView({ result, answers, onRestart }) {
         </button>
       </header>
 
-      <div className="report-canvas" ref={cardRef}>
+      <div className="report-canvas">
         <section className="report-hero">
           <div className="portrait-panel">
             <img src={result.image} alt={usesUploadedPhoto ? "用户上传的自拍影像" : "根据上传自拍生成的视觉肖像"} />
@@ -225,9 +201,6 @@ export default function ResultView({ result, answers, onRestart }) {
       </div>
 
       <div className="result-actions">
-        <button className="button button-primary" type="button" onClick={downloadReport} disabled={isDownloading}>
-          <Download size={18} /> {isDownloading ? "正在生成图片" : "下载完整报告"}
-        </button>
         <button className="button button-secondary" type="button" onClick={copyWechat}>
           {copied ? <Check size={18} /> : <Copy size={18} />}
           {copied ? "已复制微信号" : `复制微信号 ${contact.wechatId}`}
