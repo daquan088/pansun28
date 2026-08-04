@@ -7,7 +7,7 @@ export default function ProgressSidebar({ steps, currentStep }) {
         <span className="brand-mark"><Leaf size={22} /></span>
         <div>
           <strong>潘教授食养小助手</strong>
-          <span>日常观察 · 温和陪伴</span>
+          <span>舌部观察 · 温和陪伴</span>
         </div>
       </div>
 
@@ -30,7 +30,7 @@ export default function ProgressSidebar({ steps, currentStep }) {
         <LockKeyhole size={18} />
         <div>
           <strong>隐私与使用说明</strong>
-          <p>照片不用于疾病诊断或健康推断。</p>
+          <p>舌照仅作视觉呈现，不用于疾病诊断。</p>
         </div>
       </div>
     </aside>

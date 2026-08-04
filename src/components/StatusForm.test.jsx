@@ -21,18 +21,18 @@ describe("StatusForm", () => {
       "stress",
       "mood",
     ]);
-    expect(screen.getByText("以下均为本人自述")).toBeInTheDocument();
-    expect(screen.getByText(/不是照片识别，也不构成诊断/)).toBeInTheDocument();
+    expect(screen.getByText("以下均为本人自述与日常观察")).toBeInTheDocument();
+    expect(screen.getByText(/不是舌照识别，也不构成诊断/)).toBeInTheDocument();
     expect(screen.getByLabelText("持续低落")).toBeInTheDocument();
     expect(screen.getByLabelText("经常费力、久蹲或有排不尽感")).toBeInTheDocument();
-    expect(screen.getByLabelText("持续自觉偏暗或偏黄")).toBeInTheDocument();
+    expect(screen.getByLabelText("持续感觉明显偏厚或偏少")).toBeInTheDocument();
   });
 
   it("reports the selected dimension and value", () => {
     const onChange = vi.fn();
     render(<StatusForm values={{}} onChange={onChange} />);
 
-    fireEvent.click(screen.getByLabelText("自觉气色偏暗或偏黄"));
-    expect(onChange).toHaveBeenCalledWith("complexionSelfReport", "自觉气色偏暗或偏黄");
+    fireEvent.click(screen.getByLabelText("自觉持续明显偏淡或偏红"));
+    expect(onChange).toHaveBeenCalledWith("complexionSelfReport", "自觉持续明显偏淡或偏红");
   });
 });

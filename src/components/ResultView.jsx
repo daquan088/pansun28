@@ -48,7 +48,7 @@ export default function ResultView({ result, answers, onRestart }) {
       <header className="result-header">
         <div>
           <p className="eyebrow">REPORT COMPLETE · 九项自述六维汇总</p>
-          <h1>你的食养状态光谱</h1>
+          <h1>你的舌部食养状态报告</h1>
         </div>
         <button className="icon-button" type="button" onClick={onRestart} title="重新生成" aria-label="重新生成">
           <RefreshCw size={19} />
@@ -58,12 +58,12 @@ export default function ResultView({ result, answers, onRestart }) {
       <div className="report-canvas">
         <section className="report-hero">
           <div className="portrait-panel">
-            <img src={result.image} alt={usesUploadedPhoto ? "用户上传的自拍影像" : "根据上传自拍生成的视觉肖像"} />
+            <img src={result.image} alt={usesUploadedPhoto ? "用户上传的舌头照片" : "根据上传舌照生成的视觉图像"} />
             <div className="portrait-shade" />
             <span className="portrait-label"><Leaf size={15} /> 苏华食养</span>
             <div className="portrait-caption">
-              <small>{usesUploadedPhoto ? "UPLOADED PORTRAIT" : "GENERATED PORTRAIT"}</small>
-              <strong>{usesUploadedPhoto ? "自拍影像" : "视觉肖像"}</strong>
+              <small>{usesUploadedPhoto ? "UPLOADED TONGUE PHOTO" : "GENERATED VISUAL"}</small>
+              <strong>{usesUploadedPhoto ? "本人舌照" : "舌部视觉图"}</strong>
               <p>仅作报告视觉呈现，不参与状态判断</p>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function ResultView({ result, answers, onRestart }) {
 
         <footer className="report-disclaimer">
           <ShieldCheck size={17} />
-          <p>{report.disclaimer} 报告仅依据本人自述，照片不用于健康推断。</p>
+          <p>{report.disclaimer} 报告仅依据本人自述，舌照不用于疾病诊断。</p>
         </footer>
       </div>
 

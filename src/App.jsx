@@ -11,10 +11,10 @@ const loadResultView = () => import("./components/ResultView");
 const ResultView = lazy(loadResultView);
 
 const STEP_COPY = [
-  { title: "上传自拍", description: "用于生成视觉肖像" },
+  { title: "上传舌照", description: "用于报告视觉呈现" },
   { title: "九项自述", description: "记录最近一周感受" },
   { title: "确认生成", description: "确认信息使用边界" },
-  { title: "状态报告", description: "查看六维观察结果" },
+  { title: "舌部报告", description: "查看六维观察结果" },
 ];
 
 export function createAnalyzeFormData(photo, answers) {
@@ -115,7 +115,7 @@ export default function App() {
   function moveNext() {
     setError("");
     if (step === 0 && !photo) {
-      setError("请先上传一张本人自拍照。");
+      setError("请先上传一张本人舌头照片。");
       return;
     }
     if (step === 1 && completedStates !== STATUS_GROUPS.length) {
@@ -219,10 +219,10 @@ export default function App() {
         <div className={`workspace-inner ${step === 3 ? "result-workspace" : ""}`}>
           {step < 3 && (
             <header className="page-header">
-              <p className="eyebrow">苏华食养 · 状态光谱</p>
+              <p className="eyebrow">苏华食养 · 舌部状态观察</p>
               <h1>{STEP_COPY[step].title}</h1>
               <p>
-                {step === 0 && "照片仅用于生成报告中的视觉肖像，不用于任何健康推断。"}
+                {step === 0 && "请在自然光下拍摄本人舌头；照片仅作报告视觉呈现，不用于疾病诊断。"}
                 {step === 1 && "用九项本人自述记录近期节奏，并汇总为六个观察维度。"}
                 {step === 2 && "确认照片和自述的使用边界，生成你的六维状态报告。"}
               </p>
@@ -235,11 +235,11 @@ export default function App() {
           {step === 2 && (
             <section className="confirm-panel" aria-labelledby="confirm-title">
               <div className="confirm-summary">
-                <img src={previewUrl} alt="待生成视觉肖像的自拍预览" />
+                <img src={previewUrl} alt="待生成报告的舌头照片预览" />
                 <div>
                   <span className="summary-kicker"><Check size={16} /> 九项自述已就绪</span>
                   <h2 id="confirm-title">确认报告信息边界</h2>
-                  <p>报告仅依据本人自述生成；照片只用于生成视觉肖像，不参与健康推断。</p>
+                  <p>报告仅依据本人自述生成；舌照只用于报告视觉呈现，不参与疾病诊断。</p>
                 </div>
               </div>
               <label className={`consent-row ${consented ? "is-checked" : ""}`}>
@@ -250,11 +250,11 @@ export default function App() {
                   disabled={isSubmitting}
                 />
                 <span className="custom-checkbox" aria-hidden="true"><Check size={15} /></span>
-                <span>我已了解：气色、肠道、睡眠、压力与情绪等内容均为我的主动自述，不是照片识别或诊断。</span>
+                <span>我已了解：报告内容均来自我的主动自述，不是根据舌照作出的医学识别或诊断。</span>
               </label>
               <div className="privacy-note">
                 <ShieldCheck size={19} />
-                <p>请勿上传他人照片。本报告仅作日常食养与生活记录参考，不替代专业支持。</p>
+                <p>请勿上传他人舌照。本报告仅作日常食养与生活记录参考，不替代医疗专业支持。</p>
               </div>
             </section>
           )}

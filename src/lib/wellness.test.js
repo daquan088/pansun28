@@ -109,7 +109,7 @@ describe("wellness content", () => {
       expect(publicCopy).not.toContain(term);
     }
     expect(PUBLIC_DISCLAIMER).toContain("主动选择");
-    expect(PUBLIC_DISCLAIMER).toContain("不会从面部信息判断身体情况");
+    expect(PUBLIC_DISCLAIMER).toContain("不会从舌头照片判断身体情况");
   });
 
   it("returns stable output without mutating the input", () => {

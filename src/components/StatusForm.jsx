@@ -38,17 +38,17 @@ export const STATUS_GROUPS = [
   },
   {
     id: "complexionSelfReport",
-    label: "气色自我感受",
-    prompt: "不参考照片，你自己如何感受近期气色？",
+    label: "舌部自我观察",
+    prompt: "不参考本次上传照片，你平时观察到的舌头颜色更接近？",
     icon: ScanFace,
-    options: ["自觉气色明亮", "自觉气色偶尔偏暗", "自觉气色偏暗或偏黄"],
+    options: ["自觉淡红且较均匀", "自觉偶尔偏淡或偏红", "自觉持续明显偏淡或偏红"],
   },
   {
     id: "complexionPattern",
-    label: "气色变化",
-    prompt: "不参考照片，你观察到的面部气色变化更接近？",
+    label: "舌苔自我观察",
+    prompt: "不参考本次上传照片，你平时观察到的舌苔状态更接近？",
     icon: ScanFace,
-    options: ["整体较稳定", "作息不规律后偶尔偏暗", "持续自觉偏暗或偏黄"],
+    options: ["薄厚较稳定", "偶尔感觉偏厚或偏少", "持续感觉明显偏厚或偏少"],
   },
   {
     id: "sleep",
@@ -78,7 +78,7 @@ export default function StatusForm({ values, onChange }) {
     <section className="status-form" aria-label="九项本人状态自述">
       <div className="self-report-notice">
         <ScanFace size={18} />
-        <p><strong>以下均为本人自述</strong>，不是照片识别，也不构成诊断。请选择最接近最近一周感受的选项。</p>
+        <p><strong>以下均为本人自述与日常观察</strong>，不是舌照识别，也不构成诊断。请选择最接近最近一周感受的选项。</p>
       </div>
       <div className="status-grid">
         {STATUS_GROUPS.map(({ id, label, prompt, icon: Icon, options }, groupIndex) => (

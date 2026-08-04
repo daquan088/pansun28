@@ -53,7 +53,7 @@ export const DEFAULT_SELECTION = Object.freeze({
 });
 
 export const UI_LABELS = Object.freeze({
-  title: "苏华食养状态观察卡",
+  title: "苏华食养舌部状态观察报告",
   selfReport: "近期状态自述",
   preview: "本地预览",
   suggestions: "给你的日常建议",
@@ -64,7 +64,7 @@ export const UI_LABELS = Object.freeze({
 });
 
 export const PUBLIC_DISCLAIMER =
-  "照片只用于卡片展示，生活建议仅依据你主动选择的近期状态，不会从面部信息判断身体情况。本内容仅作日常食养与生活记录参考，请结合自己的实际感受灵活调整。";
+  "舌照只用于报告视觉展示，生活建议仅依据你主动选择的近期状态，不会从舌头照片判断身体情况。本内容仅作日常食养与生活记录参考，请结合自己的实际感受灵活调整。";
 
 export const PRIVATE_MESSAGE_CTA =
   "想获得更贴合日常节奏的食养交流，欢迎私信潘教授，并发送关键词“食养”。";

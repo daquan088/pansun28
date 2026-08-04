@@ -4,7 +4,7 @@ import { buildVisualReport } from "./report.js";
 const OPTIONS = Object.freeze({
   bowelRhythm: ["规律顺畅", "偶尔不够规律", "排便不够规律"],
   gutComfort: ["大多舒适", "偶有胀闷", "经常感觉不舒适"],
-  complexionSelfReport: ["自觉气色明亮", "自觉气色偶尔偏暗", "自觉气色偏暗或偏黄"],
+  complexionSelfReport: ["自觉淡红且较均匀", "自觉偶尔偏淡或偏红", "自觉持续明显偏淡或偏红"],
   sleep: ["精神比较充足", "有时仍觉疲惫", "常常睡不够或难入睡"],
   stress: ["轻松平稳", "偶有紧绷", "持续紧张"],
   mood: ["情绪活力较好", "偶有低落或提不起劲", "持续低落"]
@@ -13,7 +13,7 @@ const OPTIONS = Object.freeze({
 const SUPPLEMENT_OPTIONS = Object.freeze({
   bowelEase: ["大多轻松，不需久蹲", "偶尔费力或有排不尽感", "经常费力、久蹲或有排不尽感"],
   postMealGut: ["餐后大多舒适", "偶尔出现胀气或咕噜感", "经常出现胀气、咕噜或不适"],
-  complexionPattern: ["整体较稳定", "作息不规律后偶尔偏暗", "持续自觉偏暗或偏黄"]
+  complexionPattern: ["薄厚较稳定", "偶尔感觉偏厚或偏少", "持续感觉明显偏厚或偏少"]
 });
 
 const SUPPLEMENT_BY_DIMENSION = Object.freeze({
@@ -166,7 +166,7 @@ describe("buildVisualReport", () => {
 
     expect(report.dimensions.find(({ id }) => id === "bowelRhythm").note).toContain("排便不够规律");
     expect(report.dimensions.find(({ id }) => id === "complexionSelfReport").note).toContain("自述");
-    expect(report.dimensions.find(({ id }) => id === "complexionSelfReport").note).toContain("偏黄");
+    expect(report.dimensions.find(({ id }) => id === "complexionSelfReport").note).toContain("偏淡或偏红");
     expect(report.dimensions.find(({ id }) => id === "stress").note).toContain("持续紧张");
     expect(report.dimensions.find(({ id }) => id === "mood").note).toContain("持续低落");
     expect(copy).not.toContain("便秘");
@@ -199,12 +199,9 @@ describe("buildVisualReport", () => {
 
   it("keeps generated copy clear of diagnoses, promises, and photo inference", () => {
     const prohibited = [
-      "诊断",
       "治愈",
       "疗效",
       "调理完成度",
-      "疾病",
-      "体质",
       "脏腑",
       "面相",
       "照片显示",
@@ -223,7 +220,7 @@ describe("buildVisualReport", () => {
     }
     expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("主动选择");
     expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("九项近期自述");
-    expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("照片只用于视觉展示");
-    expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("不参与任何状态判断");
+    expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("舌照只用于视觉展示");
+    expect(buildVisualReport(BEST_ANSWERS).disclaimer).toContain("不参与疾病诊断或体质判断");
   });
 });

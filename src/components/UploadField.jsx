@@ -22,9 +22,9 @@ export default function UploadField({ file, previewUrl, onSelect }) {
       >
         {previewUrl ? (
           <div className="photo-preview">
-            <img src={previewUrl} alt="已选择的正面照预览" />
+            <img src={previewUrl} alt="已选择的舌头照片预览" />
             <div className="preview-info">
-              <span><ImagePlus size={18} /> 照片已选择</span>
+              <span><ImagePlus size={18} /> 舌照已选择</span>
               <strong>{file.name}</strong>
               <button className="button button-secondary" type="button" onClick={() => inputRef.current?.click()}>
                 <RefreshCw size={17} /> 重新选择
@@ -34,7 +34,7 @@ export default function UploadField({ file, previewUrl, onSelect }) {
         ) : (
           <button className="upload-prompt" type="button" onClick={() => inputRef.current?.click()}>
             <span className="upload-icon"><UploadCloud size={30} /></span>
-            <strong id="upload-title">拖拽照片到这里，或点击选择</strong>
+            <strong id="upload-title">拍摄或上传一张舌头照片</strong>
             <span>支持 JPG、PNG、WebP，最大 10MB</span>
           </button>
         )}
@@ -50,9 +50,9 @@ export default function UploadField({ file, previewUrl, onSelect }) {
         />
       </div>
       <div className="upload-guidance" aria-label="拍摄建议">
-        <span><Check size={17} /> 正面自然光</span>
-        <span><Check size={17} /> 面部无遮挡</span>
-        <span><Check size={17} /> 仅上传本人照片</span>
+        <span><Check size={17} /> 自然光下拍摄</span>
+        <span><Check size={17} /> 舌头自然伸出</span>
+        <span><Check size={17} /> 对焦清楚无遮挡</span>
       </div>
     </section>
   );

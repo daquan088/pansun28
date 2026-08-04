@@ -94,8 +94,8 @@ describe("Suhua image API", () => {
       expect(init.body.get("size")).toBe("1024x1024");
       expect(init.body.get("quality")).toBe("medium");
       const prompt = init.body.get("prompt");
-      expect(prompt).toContain("保留人物身份、年龄、肤色和体型");
-      expect(prompt).toContain("不得进行或暗示面相分析、健康诊断或医疗分析");
+      expect(prompt).toContain("保留舌头原始颜色、形态与纹理");
+      expect(prompt).toContain("不得进行或暗示舌诊、健康诊断、体质判断或医疗分析");
       expect(prompt).toContain("不要出现任何文字");
 
       const uploaded = Buffer.from(await init.body.get("image").arrayBuffer());

@@ -35,7 +35,7 @@ const result = {
 const answers = {
   bowelRhythm: "偶尔不够规律",
   gutComfort: "偶有胀闷",
-  complexionSelfReport: "自觉气色偶尔偏暗",
+  complexionSelfReport: "自觉偶尔偏淡或偏红",
   sleep: "有时仍觉疲惫",
   stress: "偶有紧绷",
   mood: "持续低落",
@@ -54,6 +54,6 @@ describe("ResultView", () => {
     expect(screen.getByText("请把专业支持放在优先位置")).toBeInTheDocument();
     expect(screen.getByText("扫码获取微信号")).toBeInTheDocument();
     expect(screen.getAllByText(/pansun28/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/报告仅依据本人自述，照片不用于健康推断/)).toBeInTheDocument();
+    expect(screen.getByText(/报告仅依据本人自述，舌照不用于疾病诊断/)).toBeInTheDocument();
   });
 });

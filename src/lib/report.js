@@ -91,50 +91,53 @@ const DIMENSION_DEFINITIONS = Object.freeze([
   }),
   Object.freeze({
     id: "complexionSelfReport",
-    label: "气色自我感受",
+    label: "舌部自我观察",
     color: "#C0566B",
-    fallback: "自觉气色偶尔偏暗",
+    fallback: "自觉偶尔偏淡或偏红",
     aliases: Object.freeze({
-      脸黄: "自觉气色偏暗或偏黄",
-      自觉偏暗或偏黄: "自觉气色偏暗或偏黄",
-      自觉明亮有精神: "自觉气色明亮"
+      脸黄: "自觉持续明显偏淡或偏红",
+      自觉偏暗或偏黄: "自觉持续明显偏淡或偏红",
+      自觉明亮有精神: "自觉淡红且较均匀",
+      自觉气色明亮: "自觉淡红且较均匀",
+      自觉气色偶尔偏暗: "自觉偶尔偏淡或偏红",
+      自觉气色偏暗或偏黄: "自觉持续明显偏淡或偏红"
     }),
     supplement: Object.freeze({
       id: "complexionPattern",
-      fallback: "作息不规律后偶尔偏暗",
+      fallback: "偶尔感觉偏厚或偏少",
       states: Object.freeze({
-        整体较稳定: Object.freeze({
+        薄厚较稳定: Object.freeze({
           score: 90,
-          note: "近期自觉面部气色整体较稳定。",
-          suggestion: "继续保持规律饮食、饮水和休息，并以自己的连续观察为准。"
+          note: "你自述近期舌苔薄厚较稳定。",
+          suggestion: "继续保持规律饮食、饮水和休息，并以自己的连续感受为准。"
         }),
-        作息不规律后偶尔偏暗: Object.freeze({
+        偶尔感觉偏厚或偏少: Object.freeze({
           score: 68,
-          note: "作息不规律后偶尔自觉气色偏暗。",
-          suggestion: "先连续记录几天作息、三餐和自觉气色变化，不依据单次外观下结论。"
+          note: "你自述舌苔偶尔感觉偏厚或偏少。",
+          suggestion: "先连续记录几天作息、三餐与自我观察，不依据单次外观下结论。"
         }),
-        持续自觉偏暗或偏黄: Object.freeze({
+        持续感觉明显偏厚或偏少: Object.freeze({
           score: 44,
-          note: "近期持续自觉面部气色偏暗或偏黄。",
-          suggestion: "把气色变化与作息、饮食一并记录；若持续或伴随明显不适，请咨询专业人员。"
+          note: "你自述舌苔持续感觉明显偏厚或偏少。",
+          suggestion: "把日常观察与作息、饮食一并记录；若持续或伴随明显不适，请咨询专业人员。"
         })
       })
     }),
     states: Object.freeze({
-      自觉气色明亮: Object.freeze({
+      自觉淡红且较均匀: Object.freeze({
         score: 90,
-        note: "你自述近期气色看起来较明亮。",
+        note: "你自述平时观察到舌头淡红且较均匀。",
         suggestion: "继续保持规律三餐、充足饮水和稳定休息，记录让自己感觉良好的日常安排。"
       }),
-      自觉气色偶尔偏暗: Object.freeze({
+      自觉偶尔偏淡或偏红: Object.freeze({
         score: 68,
-        note: "你自述近期气色偶尔看起来偏暗。",
+        note: "你自述平时观察到舌头偶尔偏淡或偏红。",
         suggestion: "先从规律吃饭和休息入手，每餐尽量安排多样食材，不用依据外观自行下结论。"
       }),
-      自觉气色偏暗或偏黄: Object.freeze({
+      自觉持续明显偏淡或偏红: Object.freeze({
         score: 44,
-        note: "你自述近期气色看起来偏暗或偏黄。",
-        suggestion: "把这项感受与近期作息、饮食一并记录；若变化持续或伴随明显不适，请咨询专业人员。"
+        note: "你自述平时观察到舌头持续明显偏淡或偏红。",
+        suggestion: "把这项观察与近期作息、饮食一并记录；若变化持续或伴随明显不适，请咨询专业人员。"
       })
     })
   }),
@@ -224,7 +227,7 @@ const PRAISE = Object.freeze({
 });
 
 const DISCLAIMER =
-  "本报告仅根据你主动选择的九项近期自述汇总为六个观察维度。照片只用于视觉展示，不参与任何状态判断；内容仅作日常食养与生活记录参考，不能替代心理或医疗专业支持。";
+  "本报告仅根据你主动选择的九项近期自述汇总为六个观察维度。舌照只用于视觉展示，不参与疾病诊断或体质判断；内容仅作日常食养与生活记录参考，不能替代心理或医疗专业支持。";
 
 function getAnswersSource(answers) {
   return answers !== null && typeof answers === "object" && !Array.isArray(answers)
